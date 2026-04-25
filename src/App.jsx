@@ -1,33 +1,46 @@
 import React from 'react'
-import ReactMarkdown from 'react-markdown'
-import remarkGfm from 'remark-gfm'
+import { useEditor, EditorContent } from '@tiptap/react'
+import StarterKit from '@tiptap/starter-kit'
+import Placeholder from '@tiptap/extension-placeholder'
+import TaskList from '@tiptap/extension-task-list'
+import TaskItem from '@tiptap/extension-task-item'
 import './index.css'
 
-function App() {
-  const [isEditing, setIsEditing] = React.useState(false);
-  const [noteTitle, setNoteTitle] = React.useState('Product Launch Strategy');
-  const [noteContent, setNoteContent] = React.useState(`The objective of this launch is to establish **VNotes** as the premier tool for cognitive synthesis. Our focus will be on the developer-centric market segment before expanding to broader knowledge workers.
+const INITIAL_CONTENT = `
+<h2>Product Launch Strategy</h2>
+<p>The objective of this launch is to establish <strong>VNotes</strong> as the premier tool for cognitive synthesis. Our focus will be on the developer-centric market segment before expanding to broader knowledge workers.</p>
 
-### Key Milestones
-- [x] Finalize the 4px/8px design grid and core token architecture.
-- [x] Implement fluid pane management system.
-- [ ] Deploy agentic terminal bridge for CLI integration.
-- [ ] Beta rollout to selected technical partners.
+<ul data-type="taskList">
+  <li data-checked="true">Finalize the 4px/8px design grid and core token architecture.</li>
+  <li data-checked="true">Implement fluid pane management system.</li>
+  <li data-checked="false">Deploy agentic terminal bridge for CLI integration.</li>
+  <li data-checked="false">Beta rollout to selected technical partners.</li>
+</ul>
 
-### Implementation Hook
-Standard event listener for terminal injection:
+<pre><code>const vnotesAgent = require('@vnotes/core');
 
-\`\`\`javascript
-const vnotesAgent = require('@vnotes/core');
-
-// Initialize knowledge graph context
 async function initGraph() {
   const context = await vnotesAgent.hydrate({
     depth: 2
   });
-}
-\`\`\`
-`);
+}</code></pre>
+`
+
+function App() {
+  const editor = useEditor({
+    extensions: [
+      StarterKit,
+      Placeholder.configure({
+        placeholder: 'Start writing...',
+      }),
+      TaskList,
+      TaskItem.configure({
+        nested: true,
+      }),
+    ],
+    content: INITIAL_CONTENT,
+  })
+
   const [terminalLines, setTerminalLines] = React.useState([
     'VNotes Agent v1.0.2 ready. Context loaded from 124 notes.',
     'Type /help for available commands.'
@@ -127,23 +140,6 @@ async function initGraph() {
             <span style={{ fontSize: '0.6rem', color: 'var(--outline)' }}>⌘K</span>
           </div>
           <div className="top-bar-actions">
-            <button 
-              className={`edit-toggle ${isEditing ? 'active' : ''}`}
-              onClick={() => setIsEditing(!isEditing)}
-              style={{
-                fontSize: '0.7rem',
-                padding: '0.25rem 0.75rem',
-                borderRadius: 'var(--radius-sm)',
-                background: isEditing ? 'var(--primary)' : 'transparent',
-                color: isEditing ? 'var(--on-primary)' : 'var(--on-surface-variant)',
-                border: `1px solid ${isEditing ? 'var(--primary)' : 'var(--outline-variant)'}`,
-                cursor: 'pointer',
-                fontWeight: 600,
-                textTransform: 'uppercase'
-              }}
-            >
-              {isEditing ? 'Done' : 'Edit'}
-            </button>
             <i className="fas fa-keyboard"></i>
             <i className="fas fa-share-alt"></i>
             <i className="fas fa-ellipsis-v"></i>
@@ -151,41 +147,20 @@ async function initGraph() {
         </header>
 
         <div className="editor-container">
-          <article className={`editor-content ${isEditing ? 'split-view' : ''}`}>
-            {isEditing && (
-              <div className="edit-pane">
-                <input 
-                  className="title-input"
-                  value={noteTitle}
-                  onChange={(e) => setNoteTitle(e.target.value)}
-                  placeholder="Note Title"
-                />
-                <textarea 
-                  className="content-textarea"
-                  value={noteContent}
-                  onChange={(e) => setNoteContent(e.target.value)}
-                  placeholder="Start writing markdown..."
-                />
+          <article className="editor-content">
+            <div className="note-meta">
+              <span className="tag priority">Priority: High</span>
+              <span className="tag category">Marketing</span>
+            </div>
+            <header className="note-header" style={{ marginBottom: '0.5rem' }}>
+              <div className="note-subtitle">
+                <span><i className="far fa-calendar"></i> Oct 24, 2023</span>
+                <span><i className="far fa-clock"></i> 3m ago</span>
               </div>
-            )}
-            <div className="preview-pane">
-              <div className="note-meta">
-                <span className="tag priority">Priority: High</span>
-                <span className="tag category">Marketing</span>
-              </div>
-              <header className="note-header">
-                <h2 className="note-title">{noteTitle}</h2>
-                <div className="note-subtitle">
-                  <span><i className="far fa-calendar"></i> Oct 24, 2023</span>
-                  <span><i className="far fa-clock"></i> 3m ago</span>
-                </div>
-              </header>
+            </header>
 
-              <div className="editor-body">
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                  {noteContent}
-                </ReactMarkdown>
-              </div>
+            <div className="editor-body tiptap-editor">
+              <EditorContent editor={editor} />
             </div>
           </article>
         </div>
