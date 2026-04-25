@@ -2,6 +2,41 @@ import React from 'react'
 import './index.css'
 
 function App() {
+  const [terminalLines, setTerminalLines] = React.useState([
+    'VNotes Agent v1.0.2 ready. Context loaded from 124 notes.',
+    'Type /help for available commands.'
+  ]);
+  const [terminalInput, setTerminalInput] = React.useState('');
+
+  const handleTerminalKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      const command = terminalInput.trim().toLowerCase();
+      const newLines = [...terminalLines, `vnotes >${terminalInput}`];
+      
+      switch (command) {
+        case '/help':
+          newLines.push('Available commands: /help, /list, /clear, /info');
+          break;
+        case '/list':
+          newLines.push('Notes found: [Product Launch Strategy], [Meeting Notes], [Daily Log]');
+          break;
+        case '/clear':
+          setTerminalLines([]);
+          setTerminalInput('');
+          return;
+        case '/info':
+          newLines.push('VNotes v1.0.2 - Agentic Minimalist Editor');
+          newLines.push('Build: 2026-04-25');
+          break;
+        default:
+          newLines.push(`Unknown command: ${command}`);
+      }
+      
+      setTerminalLines(newLines);
+      setTerminalInput('');
+    }
+  };
+
   return (
     <div className="app-container">
       <aside className="sidebar">
@@ -137,10 +172,38 @@ function App() {
               <i className="fas fa-times"></i>
             </div>
           </div>
-          <div className="terminal-body">
-            <div className="terminal-line">VNotes Agent v1.0.2 ready. Context loaded from 124 notes.</div>
-            <div className="terminal-line">Type <span className="highlight">/help</span> for available commands.</div>
-            <div className="terminal-line"><span className="terminal-prompt">vnotes &gt; </span>|</div>
+          <div className="terminal-body" style={{ overflowY: 'auto', height: 'calc(100% - 25px)' }}>
+            {terminalLines.map((line, i) => (
+              <div key={i} className="terminal-line">
+                {line.startsWith('vnotes >') ? (
+                  <>
+                    <span className="terminal-prompt">vnotes &gt; </span>
+                    <span>{line.replace('vnotes >', '')}</span>
+                  </>
+                ) : (
+                  <span className={line.includes('/') ? 'highlight' : ''}>{line}</span>
+                )}
+              </div>
+            ))}
+            <div className="terminal-line" style={{ display: 'flex', gap: '4px' }}>
+              <span className="terminal-prompt">vnotes &gt; </span>
+              <input
+                type="text"
+                value={terminalInput}
+                onChange={(e) => setTerminalInput(e.target.value)}
+                onKeyDown={handleTerminalKeyDown}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--on-surface)',
+                  fontFamily: 'var(--font-code)',
+                  fontSize: '0.85rem',
+                  outline: 'none',
+                  flex: 1
+                }}
+                autoFocus
+              />
+            </div>
           </div>
         </footer>
       </main>
