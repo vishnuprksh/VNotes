@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VNotes: Deep Focus Editor</title>
+    <link rel="stylesheet" href="index.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Fira+Code:wght@400;500&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="brand">
+            <div class="brand-icon">
+                <i class="fas fa-brain"></i>
+            </div>
+            <div class="brand-name">
+                <h1>VNotes</h1>
+                <p>Deep Focus</p>
+            </div>
+        </div>
+
+        <button class="btn-new-note">
+            <i class="fas fa-plus"></i>
+            New Note
+        </button>
+
+        <nav class="nav-section">
+            <h2 class="nav-section-title">Brain</h2>
+            <div class="nav-item active">
+                <i class="fas fa-folder"></i>
+                Projects
+            </div>
+            <div class="nav-item">
+                <i class="fas fa-book-open"></i>
+                Areas
+            </div>
+            <div class="nav-item">
+                <i class="fas fa-database"></i>
+                Resources
+            </div>
+            <div class="nav-item">
+                <i class="fas fa-archive"></i>
+                Archives
+            </div>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="nav-item">
+                <i class="fas fa-search"></i>
+                Search
+            </div>
+            <div class="nav-item">
+                <i class="fas fa-cog"></i>
+                Settings
+            </div>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <header class="top-bar">
+            <div class="menu-items">
+                <div class="menu-item">File</div>
+                <div class="menu-item">Edit</div>
+                <div class="menu-item">View</div>
+                <div class="menu-item">Go</div>
+            </div>
+            <div class="search-bar">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Jump to file...">
+                <span style="font-size: 0.6rem; color: var(--outline);">⌘K</span>
+            </div>
+            <div class="top-bar-actions">
+                <i class="fas fa-keyboard"></i>
+                <i class="fas fa-share-alt"></i>
+                <i class="fas fa-ellipsis-v"></i>
+            </div>
+        </header>
+
+        <div class="editor-container">
+            <article class="editor-content">
+                <div class="note-meta">
+                    <span class="tag priority">Priority: High</span>
+                    <span class="tag category">Marketing</span>
+                </div>
+                <header class="note-header">
+                    <h2 class="note-title">Product Launch Strategy</h2>
+                    <div class="note-subtitle">
+                        <span><i class="far fa-calendar"></i> Oct 24, 2023</span>
+                        <span><i class="far fa-clock"></i> 3m ago</span>
+                    </div>
+                </header>
+
+                <div class="editor-body">
+                    <p>The objective of this launch is to establish <span class="highlight">VNotes</span> as the premier tool for cognitive synthesis. Our focus will be on the developer-centric market segment before expanding to broader knowledge workers.</p>
+
+                    <h3>Key Milestones</h3>
+                    <ul class="check-list">
+                        <li class="check-item done">
+                            <span class="check-icon"><i class="fas fa-check"></i></span>
+                            Finalize the 4px/8px design grid and core token architecture.
+                        </li>
+                        <li class="check-item done">
+                            <span class="check-icon"><i class="fas fa-check"></i></span>
+                            Implement fluid pane management system.
+                        </li>
+                        <li class="check-item">
+                            <span class="check-icon"></span>
+                            Deploy agentic terminal bridge for CLI integration.
+                        </li>
+                        <li class="check-item">
+                            <span class="check-icon"></span>
+                            Beta rollout to selected technical partners.
+                        </li>
+                    </ul>
+
+                    <h3>Implementation Hook</h3>
+                    <p class="code-comment">Standard event listener for terminal injection:</p>
+                    <div class="code-block">
+                        <div><span class="code-keyword">const</span> vnotesAgent = <span class="code-keyword">require</span>(<span class="code-string">'@vnotes/core'</span>);</div>
+                        <br>
+                        <div><span class="code-comment">// Initialize knowledge graph context</span></div>
+                        <div><span class="code-keyword">async function</span> <span class="code-tertiary">initGraph</span>() {</div>
+                        <div style="padding-left: 1rem;"><span class="code-keyword">const</span> context = <span class="code-keyword">await</span> vnotesAgent.<span class="code-tertiary">hydrate</span>({</div>
+                        <div style="padding-left: 2rem;">depth: <span class="code-secondary">2</span></div>
+                        <div style="padding-left: 1rem;">});</div>
+                        <div>}</div>
+                    </div>
+                </div>
+            </article>
+        </div>
+
+        <footer class="terminal-pane">
+            <div class="terminal-header">
+                <div class="terminal-title">
+                    <i class="fas fa-terminal"></i>
+                    Agentic Terminal
+                </div>
+                <div class="top-bar-actions" style="font-size: 0.6rem;">
+                    <i class="fas fa-minus"></i>
+                    <i class="fas fa-expand-alt"></i>
+                    <i class="fas fa-times"></i>
+                </div>
+            </div>
+            <div class="terminal-body">
+                <div class="terminal-line">VNotes Agent v1.0.2 ready. Context loaded from 124 notes.</div>
+                <div class="terminal-line">Type <span class="highlight">/help</span> for available commands.</div>
+                <div class="terminal-line"><span class="terminal-prompt">vnotes > </span>|</div>
+            </div>
+        </footer>
+    </main>
+</body>
+</html>
