@@ -1,6 +1,10 @@
 # Task Tracking
-- [x] **Current Focus:** Initialize project and fetch Stitch project assets.
-- [x] Fetch Stitch project details and screens
-- [x] Download screen images
-- [x] Save screen code components (Manually implemented due to broken export)
+# Task Tracking
+- [x] **Current Focus:** Rebuild app with Vite/React and PWA support.
+- [x] Scaffold Vite project and install dependencies
+- [x] Configure `vite-plugin-pwa`
+- [x] Implement React components (Sidebar, TopBar, Editor, Terminal)
+- [x] Port styles to `App.css` (Implemented in `index.css`)
+- [x] Verify PWA installation and offline capability
+**Blockers:** None
 **Blockers:** None
