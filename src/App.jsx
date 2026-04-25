@@ -1,7 +1,33 @@
 import React from 'react'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import './index.css'
 
 function App() {
+  const [isEditing, setIsEditing] = React.useState(false);
+  const [noteTitle, setNoteTitle] = React.useState('Product Launch Strategy');
+  const [noteContent, setNoteContent] = React.useState(`The objective of this launch is to establish **VNotes** as the premier tool for cognitive synthesis. Our focus will be on the developer-centric market segment before expanding to broader knowledge workers.
+
+### Key Milestones
+- [x] Finalize the 4px/8px design grid and core token architecture.
+- [x] Implement fluid pane management system.
+- [ ] Deploy agentic terminal bridge for CLI integration.
+- [ ] Beta rollout to selected technical partners.
+
+### Implementation Hook
+Standard event listener for terminal injection:
+
+\`\`\`javascript
+const vnotesAgent = require('@vnotes/core');
+
+// Initialize knowledge graph context
+async function initGraph() {
+  const context = await vnotesAgent.hydrate({
+    depth: 2
+  });
+}
+\`\`\`
+`);
   const [terminalLines, setTerminalLines] = React.useState([
     'VNotes Agent v1.0.2 ready. Context loaded from 124 notes.',
     'Type /help for available commands.'
@@ -101,6 +127,23 @@ function App() {
             <span style={{ fontSize: '0.6rem', color: 'var(--outline)' }}>⌘K</span>
           </div>
           <div className="top-bar-actions">
+            <button 
+              className={`edit-toggle ${isEditing ? 'active' : ''}`}
+              onClick={() => setIsEditing(!isEditing)}
+              style={{
+                fontSize: '0.7rem',
+                padding: '0.25rem 0.75rem',
+                borderRadius: 'var(--radius-sm)',
+                background: isEditing ? 'var(--primary)' : 'transparent',
+                color: isEditing ? 'var(--on-primary)' : 'var(--on-surface-variant)',
+                border: `1px solid ${isEditing ? 'var(--primary)' : 'var(--outline-variant)'}`,
+                cursor: 'pointer',
+                fontWeight: 600,
+                textTransform: 'uppercase'
+              }}
+            >
+              {isEditing ? 'Done' : 'Edit'}
+            </button>
             <i className="fas fa-keyboard"></i>
             <i className="fas fa-share-alt"></i>
             <i className="fas fa-ellipsis-v"></i>
@@ -108,53 +151,40 @@ function App() {
         </header>
 
         <div className="editor-container">
-          <article className="editor-content">
-            <div className="note-meta">
-              <span className="tag priority">Priority: High</span>
-              <span className="tag category">Marketing</span>
-            </div>
-            <header className="note-header">
-              <h2 className="note-title">Product Launch Strategy</h2>
-              <div className="note-subtitle">
-                <span><i className="far fa-calendar"></i> Oct 24, 2023</span>
-                <span><i className="far fa-clock"></i> 3m ago</span>
+          <article className={`editor-content ${isEditing ? 'split-view' : ''}`}>
+            {isEditing && (
+              <div className="edit-pane">
+                <input 
+                  className="title-input"
+                  value={noteTitle}
+                  onChange={(e) => setNoteTitle(e.target.value)}
+                  placeholder="Note Title"
+                />
+                <textarea 
+                  className="content-textarea"
+                  value={noteContent}
+                  onChange={(e) => setNoteContent(e.target.value)}
+                  placeholder="Start writing markdown..."
+                />
               </div>
-            </header>
+            )}
+            <div className="preview-pane">
+              <div className="note-meta">
+                <span className="tag priority">Priority: High</span>
+                <span className="tag category">Marketing</span>
+              </div>
+              <header className="note-header">
+                <h2 className="note-title">{noteTitle}</h2>
+                <div className="note-subtitle">
+                  <span><i className="far fa-calendar"></i> Oct 24, 2023</span>
+                  <span><i className="far fa-clock"></i> 3m ago</span>
+                </div>
+              </header>
 
-            <div className="editor-body">
-              <p>The objective of this launch is to establish <span className="highlight">VNotes</span> as the premier tool for cognitive synthesis. Our focus will be on the developer-centric market segment before expanding to broader knowledge workers.</p>
-
-              <h3>Key Milestones</h3>
-              <ul className="check-list">
-                <li className="check-item done">
-                  <span className="check-icon"><i className="fas fa-check"></i></span>
-                  Finalize the 4px/8px design grid and core token architecture.
-                </li>
-                <li className="check-item done">
-                  <span className="check-icon"><i className="fas fa-check"></i></span>
-                  Implement fluid pane management system.
-                </li>
-                <li className="check-item">
-                  <span className="check-icon"></span>
-                  Deploy agentic terminal bridge for CLI integration.
-                </li>
-                <li className="check-item">
-                  <span className="check-icon"></span>
-                  Beta rollout to selected technical partners.
-                </li>
-              </ul>
-
-              <h3>Implementation Hook</h3>
-              <p className="code-comment">Standard event listener for terminal injection:</p>
-              <div className="code-block">
-                <div><span className="code-keyword">const</span> vnotesAgent = <span className="code-keyword">require</span>(<span className="code-string">'@vnotes/core'</span>);</div>
-                <br />
-                <div><span className="code-comment">// Initialize knowledge graph context</span></div>
-                <div><span className="code-keyword">async function</span> <span className="code-tertiary">initGraph</span>() {'{'}</div>
-                <div style={{ paddingLeft: '1rem' }}><span className="code-keyword">const</span> context = <span className="code-keyword">await</span> vnotesAgent.<span className="code-tertiary">hydrate</span>({'{'}</div>
-                <div style={{ paddingLeft: '2rem' }}>depth: <span className="code-secondary">2</span></div>
-                <div style={{ paddingLeft: '1rem' }}>{'}'});</div>
-                <div>{'}'}</div>
+              <div className="editor-body">
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  {noteContent}
+                </ReactMarkdown>
               </div>
             </div>
           </article>
