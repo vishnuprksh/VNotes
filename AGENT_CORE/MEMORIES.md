@@ -13,3 +13,8 @@
 - **Context:** User requested functional terminal and documentation.
 - **Decision:** Implemented React-based terminal state machine and created `vnotes_documentation.md`.
 - **Reasoning:** Moves the app from a visual prototype to a functional "agentic" platform.
+
+### 2026-04-25 - Strategic Refactor
+- **Context:** User found the app lacked workflow and architecture.
+- **Decision:** Moving from monolithic `App.jsx` to component-based architecture and implementing LocalStorage persistence.
+- **Reasoning:** Necessary for scalability, real-world utility, and better maintenance.
