@@ -1,7 +1,10 @@
 import React from 'react';
 import { PARA_CATEGORIES, CATEGORY_ICONS } from '../utils/para';
+import { useNotesContext } from '../context/NotesContext';
 
-const Sidebar = ({ notes, activeNoteId, onNoteSelect, onNewNote, searchQuery = '' }) => {
+const Sidebar = () => {
+  const { notes, activeNoteId, setActiveNoteId, createNote, searchQuery } = useNotesContext();
+
   return (
     <aside className="sidebar">
       <div className="brand">
@@ -12,7 +15,7 @@ const Sidebar = ({ notes, activeNoteId, onNoteSelect, onNewNote, searchQuery = '
         </div>
       </div>
       
-      <button className="new-note-btn" onClick={onNewNote}>
+      <button className="new-note-btn" onClick={() => createNote()}>
         <i className="fas fa-plus"></i>
         New Note
       </button>
@@ -36,7 +39,7 @@ const Sidebar = ({ notes, activeNoteId, onNoteSelect, onNewNote, searchQuery = '
                   <li 
                     key={note.id} 
                     className={`nav-sub-item ${activeNoteId === note.id ? 'active' : ''}`}
-                    onClick={() => onNoteSelect(note.id)}
+                    onClick={() => setActiveNoteId(note.id)}
                   >
                     {note.title}
                   </li>

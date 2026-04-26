@@ -1,6 +1,16 @@
 import React from 'react';
+import { useNotesContext } from '../context/NotesContext';
 
-const Terminal = ({ lines, input, onInputChange, onKeyDown }) => {
+const Terminal = () => {
+  const { terminalLines, terminalInput, setTerminalInput, executeCommand } = useNotesContext();
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      executeCommand(terminalInput);
+      setTerminalInput('');
+    }
+  };
+
   return (
     <footer className="terminal-pane">
       <div className="terminal-header">
@@ -15,7 +25,7 @@ const Terminal = ({ lines, input, onInputChange, onKeyDown }) => {
         </div>
       </div>
       <div className="terminal-body" style={{ overflowY: 'auto', height: 'calc(100% - 25px)' }}>
-        {lines.map((line, i) => (
+        {terminalLines.map((line, i) => (
           <div key={i} className="terminal-line">
             {line.startsWith('vnotes >') ? (
               <>
@@ -31,9 +41,9 @@ const Terminal = ({ lines, input, onInputChange, onKeyDown }) => {
           <span className="terminal-prompt">vnotes &gt; </span>
           <input
             type="text"
-            value={input}
-            onChange={(e) => onInputChange(e.target.value)}
-            onKeyDown={onKeyDown}
+            value={terminalInput}
+            onChange={(e) => setTerminalInput(e.target.value)}
+            onKeyDown={handleKeyDown}
             className="terminal-input"
             autoFocus
           />

@@ -18,3 +18,8 @@
 - **Context:** User found the app lacked workflow and architecture.
 - **Decision:** Moving from monolithic `App.jsx` to component-based architecture and implementing LocalStorage persistence.
 - **Reasoning:** Necessary for scalability, real-world utility, and better maintenance.
+
+### 2026-04-26 - Render Deployment & Context Refactor
+- **Context:** User requested deployment to Render and architecture changes.
+- **Decision:** Moving state management to React Context API and adding Render Blueprint configuration.
+- **Reasoning:** Context API simplifies global state access (notes/terminal) and prepares the app for future features. Render Blueprints ensure consistent deployments.

@@ -1,7 +1,11 @@
 import React from 'react';
 import { EditorContent } from '@tiptap/react';
+import { useNotesContext } from '../context/NotesContext';
 
-const Editor = ({ editor, activeNote }) => {
+const Editor = ({ editor }) => {
+  const { notes, activeNoteId } = useNotesContext();
+  const activeNote = notes[activeNoteId];
+
   if (!activeNote || !editor) return <div className="editor-container">Select a note</div>;
 
   return (

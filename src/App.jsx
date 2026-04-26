@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useEffect } from 'react';
 import { useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
@@ -9,19 +9,15 @@ import Sidebar from './components/Sidebar';
 import TopBar from './components/TopBar';
 import Editor from './components/Editor';
 import Terminal from './components/Terminal';
-import { useNotes } from './hooks/useNotes';
+import { useNotesContext } from './context/NotesContext';
 import './index.css';
 
 function App() {
-  const { notes, updateNote, createNote, deleteNote, moveNote } = useNotes();
-  const [activeNoteId, setActiveNoteId] = useState(() => Object.keys(notes)[0] || null);
-  const [terminalLines, setTerminalLines] = useState([
-    'VNotes Agent v1.1.0 ready. PARA context active.',
-    'Persistence layer: LocalStorage initialized.',
-    'Type /help for available commands.'
-  ]);
-  const [terminalInput, setTerminalInput] = useState('');
-  const [searchQuery, setSearchQuery] = useState('');
+  const { 
+    notes, 
+    activeNoteId, 
+    updateNote,
+  } = useNotesContext();
 
   const editor = useEditor({
     extensions: [
@@ -52,97 +48,16 @@ function App() {
     }
   }, [activeNoteId, editor, notes]);
 
-  const handleNewNote = useCallback(() => {
-    const id = createNote();
-    setActiveNoteId(id);
-  }, [createNote]);
-
-  const handleTerminalCommand = (input) => {
-    const args = input.trim().split(' ');
-    const command = args[0].toLowerCase();
-    const newLines = [...terminalLines, `vnotes > ${input}`];
-
-    switch (command) {
-      case '/help':
-        newLines.push('Available commands:');
-        newLines.push('  /create [category] - Create a new note');
-        newLines.push('  /delete - Delete active note');
-        newLines.push('  /move [category] - Move active note to category');
-        newLines.push('  /list - List all notes by PARA');
-        newLines.push('  /clear - Clear terminal');
-        break;
-      case '/create':
-        const cat = args[1] || 'Projects';
-        const newId = createNote(cat);
-        setActiveNoteId(newId);
-        newLines.push(`Created new note in ${cat}`);
-        break;
-      case '/delete':
-        if (activeNoteId) {
-          deleteNote(activeNoteId);
-          setActiveNoteId(Object.keys(notes)[0] || null);
-          newLines.push('Deleted active note.');
-        }
-        break;
-      case '/move':
-        const newCat = args[1];
-        if (activeNoteId && newCat) {
-          moveNote(activeNoteId, newCat);
-          newLines.push(`Moved note to ${newCat}`);
-        } else {
-          newLines.push('Usage: /move [Projects|Areas|Resources|Archives]');
-        }
-        break;
-      case '/list':
-        newLines.push('PARA Hierarchy:');
-        Object.values(notes).forEach(n => {
-          newLines.push(`- [${n.category}] ${n.title}`);
-        });
-        break;
-      case '/clear':
-        setTerminalLines([]);
-        return;
-      default:
-        newLines.push(`Agent: Unknown command "${command}". Type /help.`);
-    }
-
-    setTerminalLines(newLines);
-  };
-
-  const filteredNotes = Object.values(notes).filter(n => 
-    n.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    n.content.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
   return (
     <div className="app-container">
-      <Sidebar 
-        notes={notes} 
-        activeNoteId={activeNoteId} 
-        onNoteSelect={setActiveNoteId}
-        onNewNote={handleNewNote}
-        searchQuery={searchQuery}
-      />
+      <Sidebar />
       
       <main className="main-content">
-        <TopBar onSearch={setSearchQuery} />
+        <TopBar />
         
-        <Editor 
-          editor={editor} 
-          activeNote={notes[activeNoteId]} 
-        />
+        <Editor editor={editor} />
 
-        <Terminal 
-          lines={terminalLines}
-          input={terminalInput}
-          onInputChange={setTerminalInput}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') {
-              handleTerminalCommand(terminalInput);
-              setTerminalInput('');
-            }
-          }}
-        />
+        <Terminal />
       </main>
     </div>
   );

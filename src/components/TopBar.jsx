@@ -1,6 +1,9 @@
 import React from 'react';
+import { useNotesContext } from '../context/NotesContext';
 
-const TopBar = ({ onSearch }) => {
+const TopBar = () => {
+  const { setSearchQuery } = useNotesContext();
+
   return (
     <header className="top-bar">
       <div className="menu-items">
@@ -14,7 +17,7 @@ const TopBar = ({ onSearch }) => {
         <input 
           type="text" 
           placeholder="Jump to file..." 
-          onChange={(e) => onSearch(e.target.value)}
+          onChange={(e) => setSearchQuery(e.target.value)}
         />
         <span style={{ fontSize: '0.6rem', color: 'var(--outline)' }}>⌘K</span>
       </div>

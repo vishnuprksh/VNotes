@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: vnotes
+    runtime: static
+    buildCommand: npm install && npm run build
+    publishPath: dist
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: 20
