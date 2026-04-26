@@ -1,9 +1,11 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { PARA_CATEGORIES, CATEGORY_ICONS } from '../utils/para';
 import { useNotesContext } from '../context/NotesContext';
+import { useAuth } from '../context/AuthContext';
 import ContextMenu from './ContextMenu';
 
 const Sidebar = () => {
+  const { currentUser, signInWithGoogle, signOut } = useAuth();
   const { 
     notes, 
     activeNoteId, 
@@ -326,6 +328,16 @@ const Sidebar = () => {
       <div className="sidebar-footer">
         <div className="sidebar-item"><i className="fas fa-search"></i> Search</div>
         <div className="sidebar-item"><i className="fas fa-cog"></i> Settings</div>
+        {currentUser ? (
+          <div className="sidebar-item user-profile" onClick={signOut}>
+            <img src={currentUser.photoURL || 'https://via.placeholder.com/24'} alt="User" className="user-avatar" style={{width: 20, height: 20, borderRadius: '50%', marginRight: 8}} />
+            <span>Sign Out</span>
+          </div>
+        ) : (
+          <div className="sidebar-item" onClick={signInWithGoogle}>
+            <i className="fab fa-google"></i> Sign In
+          </div>
+        )}
       </div>
 
       <ContextMenu 

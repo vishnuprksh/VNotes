@@ -1,5 +1,7 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { INITIAL_NOTES } from '../utils/para';
+import { routeInput, ROUTE_AGENT } from '../agent/agentRouter';
+import { runAgent } from '../agent/agentCore';
 
 const NotesContext = createContext();
 
@@ -22,12 +24,19 @@ export const NotesProvider = ({ children }) => {
 
   // Terminal state
   const [terminalLines, setTerminalLines] = useState([
-    'VNotes Agent v1.2.0 (Context) ready.',
-    'Persistence layer: LocalStorage active.',
-    'Type /help for available commands.'
+    { type: 'system', text: 'VNotes Agent v2.0.0 ready.' },
+    { type: 'system', text: 'Persistence layer: LocalStorage active.' },
+    { type: 'system', text: 'Type /help for commands, or ask me anything naturally.' },
+    { type: 'system', text: 'Use /setkey <key> to set your OpenRouter API key.' },
   ]);
   const [terminalInput, setTerminalInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [isAgentThinking, setIsAgentThinking] = useState(false);
+
+  // API key stored in memory (not persisted for security)
+  const apiKeyRef = useRef(
+    import.meta.env.VITE_OPENROUTER_API_KEY || ''
+  );
 
   // Persist notes
   useEffect(() => {
@@ -42,15 +51,14 @@ export const NotesProvider = ({ children }) => {
   }, []);
 
   const createNote = useCallback((category) => {
-    // Determine default category: passed arg > active note category > Projects
     const defaultCategory = category || (activeNoteId && notes[activeNoteId] ? notes[activeNoteId].category : 'Projects');
-    
     const id = `note-${Date.now()}`;
     const newNote = {
       id,
       title: 'Untitled Note',
       category: defaultCategory,
       tag: 'New',
+      createdAt: new Date().toISOString(),
       content: '<h2>Untitled Note</h2><p>Start typing...</p>'
     };
     setNotes(prev => ({ ...prev, [id]: newNote }));
@@ -89,7 +97,6 @@ export const NotesProvider = ({ children }) => {
   }, []);
 
   const deleteSubSection = useCallback((path) => {
-    // Moves notes in the sub-section to the parent category
     const parentPath = path.split('/').slice(0, -1).join('/') || 'Projects';
     setNotes(prev => {
       const next = { ...prev };
@@ -102,72 +109,180 @@ export const NotesProvider = ({ children }) => {
     });
   }, []);
 
-  const executeCommand = (input) => {
-    const args = input.trim().split(' ');
+  // ─── Agent pipeline ────────────────────────────────────────────────────────
+  const runAgentQuery = useCallback((query, currentNotes) => {
+    // Append user query line
+    setTerminalLines(prev => [
+      ...prev,
+      { type: 'user', text: query },
+    ]);
+
+    setIsAgentThinking(true);
+
+    // We'll build the agent response in a mutable ref and then append
+    let agentResponse = '';
+    const agentLineId = `agent-${Date.now()}`;
+
+    // Insert a placeholder agent line
+    setTerminalLines(prev => [
+      ...prev,
+      { type: 'agent', text: '', id: agentLineId, streaming: true },
+    ]);
+
+    runAgent({
+      query,
+      notes: currentNotes,
+      apiKey: apiKeyRef.current,
+      onSearchResults: (results) => {
+        if (results.length > 0) {
+          const titles = results.map(r => `"${r.note.title}"`).join(', ');
+          setTerminalLines(prev => [
+            ...prev.slice(0, -1), // remove the streaming placeholder temporarily
+            { type: 'system-dim', text: `↳ Searching notes… found: ${titles}` },
+            { type: 'agent', text: '', id: agentLineId, streaming: true },
+          ]);
+        }
+      },
+      onToken: (token) => {
+        agentResponse += token;
+        // Update the last agent line in-place
+        setTerminalLines(prev => {
+          const next = [...prev];
+          const lastIdx = next.length - 1;
+          if (next[lastIdx]?.id === agentLineId) {
+            next[lastIdx] = { ...next[lastIdx], text: agentResponse };
+          }
+          return next;
+        });
+      },
+      onDone: () => {
+        // Mark streaming complete
+        setTerminalLines(prev => {
+          const next = [...prev];
+          const lastIdx = next.length - 1;
+          if (next[lastIdx]?.id === agentLineId) {
+            next[lastIdx] = { ...next[lastIdx], streaming: false };
+          }
+          return next;
+        });
+        setIsAgentThinking(false);
+      },
+      onError: (errMsg) => {
+        setTerminalLines(prev => [
+          ...prev.filter(l => l.id !== agentLineId),
+          { type: 'error', text: `Agent error: ${errMsg}` },
+        ]);
+        setIsAgentThinking(false);
+      },
+    });
+  }, []);
+
+  // ─── Command executor ───────────────────────────────────────────────────────
+  const executeCommand = useCallback((input) => {
+    const trimmed = input.trim();
+    if (!trimmed) return;
+
+    // Route to agent or command handler
+    if (routeInput(trimmed) === ROUTE_AGENT) {
+      runAgentQuery(trimmed, notes);
+      return;
+    }
+
+    // /command handling
+    const args = trimmed.split(' ');
     const command = args[0].toLowerCase();
-    const newLines = [...terminalLines, `vnotes > ${input}`];
+    const newLines = [
+      ...terminalLines,
+      { type: 'user', text: trimmed },
+    ];
 
     switch (command) {
       case '/help':
-        newLines.push('Available commands:');
-        newLines.push('  /create [category] - Create a new note');
-        newLines.push('  /delete - Delete active note');
-        newLines.push('  /move [category] - Move active note to category');
-        newLines.push('  /search [query] - Filter notes by title/content');
-        newLines.push('  /clear-search - Reset sidebar search');
-        newLines.push('  /list - List all notes by PARA');
-        newLines.push('  /clear - Clear terminal');
+        newLines.push({ type: 'system', text: '── Commands ──────────────────────' });
+        newLines.push({ type: 'system', text: '  /create [category]  — Create a new note' });
+        newLines.push({ type: 'system', text: '  /delete             — Delete active note' });
+        newLines.push({ type: 'system', text: '  /move [category]    — Move active note' });
+        newLines.push({ type: 'system', text: '  /search [query]     — Filter sidebar' });
+        newLines.push({ type: 'system', text: '  /clear-search       — Reset search' });
+        newLines.push({ type: 'system', text: '  /list               — List all notes' });
+        newLines.push({ type: 'system', text: '  /setkey <key>       — Set OpenRouter API key' });
+        newLines.push({ type: 'system', text: '  /clear              — Clear terminal' });
+        newLines.push({ type: 'system', text: '── AI Agent ──────────────────────' });
+        newLines.push({ type: 'system', text: '  Type anything without / to ask the AI about your notes.' });
+        newLines.push({ type: 'system', text: '  Example: "what did I work on last week?"' });
         break;
-      case '/create':
+
+      case '/setkey': {
+        const key = args.slice(1).join(' ').trim();
+        if (key) {
+          apiKeyRef.current = key;
+          newLines.push({ type: 'system', text: '✓ OpenRouter API key set for this session.' });
+        } else {
+          newLines.push({ type: 'error', text: 'Usage: /setkey <your-openrouter-key>' });
+        }
+        break;
+      }
+
+      case '/create': {
         const cat = args[1] || 'Projects';
         createNote(cat);
-        newLines.push(`Created new note in ${cat}`);
+        newLines.push({ type: 'system', text: `✓ Created new note in ${cat}` });
         break;
+      }
+
       case '/delete':
         if (activeNoteId) {
           deleteNote(activeNoteId);
-          newLines.push('Deleted active note.');
+          newLines.push({ type: 'system', text: '✓ Deleted active note.' });
         } else {
-          newLines.push('Error: No active note to delete.');
+          newLines.push({ type: 'error', text: 'Error: No active note to delete.' });
         }
         break;
-      case '/move':
+
+      case '/move': {
         const newCat = args[1];
         if (activeNoteId && newCat) {
           moveNote(activeNoteId, newCat);
-          newLines.push(`Moved note to ${newCat}`);
+          newLines.push({ type: 'system', text: `✓ Moved note to ${newCat}` });
         } else {
-          newLines.push('Usage: /move [Projects|Areas|Resources|Archives]');
+          newLines.push({ type: 'error', text: 'Usage: /move [Projects|Areas|Resources|Archives]' });
         }
         break;
+      }
+
       case '/list':
-        newLines.push('PARA Hierarchy:');
+        newLines.push({ type: 'system', text: 'PARA Hierarchy:' });
         Object.values(notes).forEach(n => {
-          newLines.push(`- [${n.category}] ${n.title}`);
+          newLines.push({ type: 'system', text: `  [${n.category}] ${n.title}` });
         });
         break;
-      case '/search':
+
+      case '/search': {
         const query = args.slice(1).join(' ');
         if (query) {
           setSearchQuery(query);
-          newLines.push(`Searching for: "${query}"`);
+          newLines.push({ type: 'system', text: `Searching sidebar for: "${query}"` });
         } else {
-          newLines.push('Usage: /search [query]');
+          newLines.push({ type: 'error', text: 'Usage: /search [query]' });
         }
         break;
+      }
+
       case '/clear-search':
         setSearchQuery('');
-        newLines.push('Search filter cleared.');
+        newLines.push({ type: 'system', text: '✓ Search filter cleared.' });
         break;
+
       case '/clear':
         setTerminalLines([]);
         return;
+
       default:
-        newLines.push(`Agent: Unknown command "${command}". Type /help.`);
+        newLines.push({ type: 'error', text: `Unknown command "${command}". Type /help.` });
     }
 
     setTerminalLines(newLines);
-  };
+  }, [terminalLines, notes, activeNoteId, createNote, deleteNote, moveNote, runAgentQuery]);
 
   const value = {
     notes,
@@ -178,13 +293,14 @@ export const NotesProvider = ({ children }) => {
     setTerminalInput,
     searchQuery,
     setSearchQuery,
+    isAgentThinking,
     updateNote,
     createNote,
     deleteNote,
     moveNote,
     renameSubSection,
     deleteSubSection,
-    executeCommand
+    executeCommand,
   };
 
   return <NotesContext.Provider value={value}>{children}</NotesContext.Provider>;

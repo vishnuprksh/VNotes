@@ -12,4 +12,11 @@
 - [x] Context Menu (Move/Delete)
 - [x] Seamless Sub-section Creation
 
+- [x] **Current Focus:** Google Authentication via Firebase
+- [x] Create Firebase Project & Web App
+- [x] Initialize Firebase Auth in Workspace
+- [x] Install Firebase dependencies
+- [x] Implement `src/firebase.js`
+- [x] Update UI (`Sidebar.jsx`) with Google Sign-In button
+
 **Blockers:** None

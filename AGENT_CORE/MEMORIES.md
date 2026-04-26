@@ -8,3 +8,10 @@
 - **Context:** Need power-user features.
 - **Decision:** Added `/search` and `/clear` commands.
 - **Reasoning:** Terminal is a core part of the "VNotes" identity; basic UI actions should be scriptable/executable via terminal.
+
+### 2026-04-26 - AI Agent Architecture
+- **Context:** User wants natural language queries answered from their notes in the terminal.
+- **Decision:** Client-side TF-IDF vector search + OpenRouter streaming (`z-ai/glm-4.5-air:free`). No new npm packages. Agent has read-only access (frozen notes snapshot). API key stored in `apiKeyRef` in-memory, set via `/setkey` terminal command.
+- **Reasoning:** Keeps the app pure-frontend. TF-IDF is fast, free, and sufficient for personal notes. Streaming gives a live terminal feel. Read-only by design — agent cannot write.
+- **Terminal line format changed:** Lines are now typed objects `{ type, text, id?, streaming? }` not plain strings. This allows per-type rendering (agent vs user vs error vs system).
+

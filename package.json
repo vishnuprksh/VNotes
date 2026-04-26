@@ -15,6 +15,7 @@
     "@tiptap/extension-task-list": "^3.22.4",
     "@tiptap/react": "^3.22.4",
     "@tiptap/starter-kit": "^3.22.4",
+    "firebase": "^12.12.1",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
     "react-markdown": "^10.1.0",

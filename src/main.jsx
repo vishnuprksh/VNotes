@@ -3,11 +3,14 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.jsx'
 import { NotesProvider } from './context/NotesContext'
+import { AuthProvider } from './context/AuthContext'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <NotesProvider>
-      <App />
-    </NotesProvider>
+    <AuthProvider>
+      <NotesProvider>
+        <App />
+      </NotesProvider>
+    </AuthProvider>
   </StrictMode>,
 )

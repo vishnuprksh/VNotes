@@ -1,0 +1,10 @@
+{
+  "auth": {
+    "providers": {
+      "googleSignIn": {
+        "oAuthBrandDisplayName": "VNotes",
+        "supportEmail": "vishnucheppanam@gmail.com"
+      }
+    }
+  }
+}

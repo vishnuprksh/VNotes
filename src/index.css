@@ -626,6 +626,129 @@ ul[data-type="taskList"] input[type="checkbox"] {
     flex: 1;
 }
 
+.terminal-prompt {
+    color: var(--primary);
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+/* ── Agent Terminal Styles ──────────────────────────── */
+
+/* Agent AI response lines */
+.terminal-agent-line {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    padding: 0.3rem 0;
+    border-left: 2px solid rgba(111, 238, 225, 0.4);
+    padding-left: 0.6rem;
+    margin: 0.25rem 0;
+    background: linear-gradient(90deg, rgba(111, 238, 225, 0.04), transparent);
+    border-radius: 0 4px 4px 0;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.terminal-agent-prefix {
+    color: var(--primary);
+    font-weight: 700;
+    flex-shrink: 0;
+    font-size: 0.85rem;
+    margin-top: 1px;
+}
+
+.terminal-agent-text {
+    color: #d4f5f0;
+    flex: 1;
+}
+
+/* Error lines */
+.terminal-error-line {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    color: #ff6b6b;
+    padding: 0.1rem 0;
+}
+
+.terminal-error-prefix {
+    color: #ff6b6b;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+/* Dim system lines (e.g., search trace) */
+.terminal-dim-line {
+    color: var(--outline);
+    font-size: 0.78rem;
+    opacity: 0.6;
+    padding: 0.1rem 0;
+    font-style: italic;
+}
+
+/* Blinking cursor for streaming */
+.terminal-cursor {
+    display: inline-block;
+    color: var(--primary);
+    animation: terminalBlink 1s step-end infinite;
+    font-weight: 300;
+    line-height: 1;
+}
+
+@keyframes terminalBlink {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0; }
+}
+
+/* Thinking badge in terminal header */
+.terminal-thinking-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: rgba(111, 238, 225, 0.08);
+    border: 1px solid rgba(111, 238, 225, 0.25);
+    border-radius: 20px;
+    padding: 1px 8px;
+    font-size: 0.6rem;
+    color: var(--primary);
+    letter-spacing: 0.05rem;
+    animation: thinkingFade 1.5s ease-in-out infinite;
+}
+
+.terminal-thinking-dot {
+    width: 5px;
+    height: 5px;
+    background: var(--primary);
+    border-radius: 50%;
+    animation: thinkingPulse 1s ease-in-out infinite;
+}
+
+@keyframes thinkingPulse {
+    0%, 100% { transform: scale(1);   opacity: 1; }
+    50%       { transform: scale(1.5); opacity: 0.5; }
+}
+
+@keyframes thinkingFade {
+    0%, 100% { opacity: 0.7; }
+    50%       { opacity: 1; }
+}
+
+/* Disabled input when agent is thinking */
+.terminal-input:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+/* Terminal body scrollbar */
+.terminal-body::-webkit-scrollbar {
+    width: 3px;
+}
+.terminal-body::-webkit-scrollbar-thumb {
+    background: var(--outline-variant);
+    border-radius: 10px;
+}
+
 .highlight {
     color: var(--primary);
     font-weight: 600;
