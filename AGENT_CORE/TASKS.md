@@ -25,6 +25,10 @@
 - [x] **Next Step:** Advanced Sub-section Management
 - [x] Allow moving notes directly into sub-sections via Context Menu.
 - [x] Add Rename/Delete options for sub-sections.
+- [ ] **Current Focus:** Sidebar Creation & Organization
+- [ ] PARA `+` creates sub-sections.
+- [ ] Sub-section `+` creates notes.
+- [ ] Implement Expand/Collapse for sub-sections.
 **Blockers:** None
 
 

@@ -25,6 +25,21 @@ const Sidebar = () => {
     target: null 
   });
 
+  const [expandedSections, setExpandedSections] = useState(new Set());
+
+  const toggleSection = (e, path) => {
+    e.stopPropagation();
+    setExpandedSections(prev => {
+      const next = new Set(prev);
+      if (next.has(path)) {
+        next.delete(path);
+      } else {
+        next.add(path);
+      }
+      return next;
+    });
+  };
+
   // Calculate all unique categories for the 'Move To' menu
   const allCategories = useMemo(() => {
     const cats = new Set(PARA_CATEGORIES);
@@ -103,7 +118,19 @@ const Sidebar = () => {
     const subName = prompt(`Enter sub-section name for ${mainCategory}:`);
     if (subName) {
       const fullPath = `${mainCategory}/${subName}`;
+      // Creating a sub-section is represented by creating a placeholder note
       createNote(fullPath);
+      // Automatically expand the new section
+      setExpandedSections(prev => new Set(prev).add(fullPath));
+    }
+  };
+
+  const handleAddNoteToSubSection = (e, fullPath) => {
+    e.stopPropagation();
+    createNote(fullPath);
+    // Ensure it's expanded so user sees the new note
+    if (!expandedSections.has(fullPath)) {
+      setExpandedSections(prev => new Set(prev).add(fullPath));
     }
   };
 
@@ -168,18 +195,30 @@ const Sidebar = () => {
                 {/* Sub-sections */}
                 {Object.entries(subSections).map(([subName, subNotes]) => {
                   const fullSubPath = `${mainCategory}/${subName}`;
+                  const isExpanded = expandedSections.has(fullSubPath);
+                  
                   return (
-                    <div key={subName} className="nav-subsection">
+                    <div key={subName} className={`nav-subsection ${isExpanded ? 'expanded' : ''}`}>
                       <div 
                         className="subsection-header"
+                        onClick={(e) => toggleSection(e, fullSubPath)}
                         onContextMenu={(e) => handleContextMenu(e, fullSubPath, 'subsection')}
                       >
-                        <i className="fas fa-chevron-right"></i>
-                        {subName}
+                        <i className={`fas fa-chevron-right ${isExpanded ? 'rotated' : ''}`}></i>
+                        <span className="sub-title">{subName}</span>
+                        <button 
+                          className="add-note-inline-btn" 
+                          onClick={(e) => handleAddNoteToSubSection(e, fullSubPath)}
+                          title="Add note to section"
+                        >
+                          <i className="fas fa-plus"></i>
+                        </button>
                       </div>
-                      <ul className="nav-sub-list nested">
-                        {subNotes.map(renderNoteItem)}
-                      </ul>
+                      {isExpanded && (
+                        <ul className="nav-sub-list nested">
+                          {subNotes.map(renderNoteItem)}
+                        </ul>
+                      )}
                     </div>
                   );
                 })}

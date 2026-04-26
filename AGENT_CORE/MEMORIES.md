@@ -61,8 +61,7 @@
 - **Context:** User requested better sidebar organization; current PARA system is derived but hard to manage.
 - **Decision:** Planning to add "Move to Sub-section" and sub-section lifecycle management (Rename/Delete).
 - **Reasoning:** Necessary for the PARA system to be fully functional and user-friendly beyond simple note creation.
-
-### 2026-04-26 - Advanced Sub-section Management Implementation
-- **Context:** User approved the plan to enhance PARA organization.
-- **Decision:** Implemented context-aware menus and cascading logic for renames/deletions.
-- **Reasoning:** Ensures data integrity while providing a powerful GUI-driven organizational tool. The system now feels like a mature PARA-based knowledge manager.
+### 2026-04-26 - Sidebar Creation & Organization Refinement
+- **Context:** User requested specific creation triggers: PARA `+` for sub-sections, Sub-section `+` for notes. Also requested expand/collapse.
+- **Decision:** Implementing `expandedSections` state and adding contextual `+` buttons to sub-section headers.
+- **Reasoning:** Improves UX by making the hierarchy more manageable and the creation flow more intuitive within the PARA framework.
