@@ -41,19 +41,22 @@ export const NotesProvider = ({ children }) => {
     }));
   }, []);
 
-  const createNote = useCallback((category = 'Projects') => {
+  const createNote = useCallback((category) => {
+    // Determine default category: passed arg > active note category > Projects
+    const defaultCategory = category || (activeNoteId && notes[activeNoteId] ? notes[activeNoteId].category : 'Projects');
+    
     const id = `note-${Date.now()}`;
     const newNote = {
       id,
       title: 'Untitled Note',
-      category,
+      category: defaultCategory,
       tag: 'New',
       content: '<h2>Untitled Note</h2><p>Start typing...</p>'
     };
     setNotes(prev => ({ ...prev, [id]: newNote }));
     setActiveNoteId(id);
     return id;
-  }, []);
+  }, [activeNoteId, notes]);
 
   const deleteNote = useCallback((id) => {
     setNotes(prev => {

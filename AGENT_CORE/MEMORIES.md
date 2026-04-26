@@ -48,3 +48,7 @@
 - **Context:** User noted sidebar and main window are indistinguishable due to same color.
 - **Decision:** Using Stitch to redesign for better contrast and glassmorphism.
 - **Reasoning:** Improving visual hierarchy and user experience through clear separation of functional areas.
+### 2026-04-26 - PARA Sub-sections & 'New Note' Fix
+- **Context:** User requested sub-sections in PARA and noted 'New Note' always defaults to Projects.
+- **Decision:** Implementing hierarchical category rendering in Sidebar and making 'New Note' dynamic based on active note.
+- **Reasoning:** Enhances organization capabilities and streamlines workflow by respecting the current context.

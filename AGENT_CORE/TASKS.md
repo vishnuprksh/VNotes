@@ -13,10 +13,11 @@
 - [x] Add Search and Tagging functionality.
 - [x] Setup Render MCP (Fixed to official hosted URL).
 - [x] Test Render MCP Connection (Manual API verification successful).
-- [x] **Current Focus:** UI Improvement & Contrast Distinction
-- [x] Redesign Sidebar/Main Window contrast in Stitch.
-- [x] Apply new design tokens and styles to the codebase.
-- [x] Verify UI improvements in the browser.
+- [x] **Current Focus:** PARA Sub-sections & 'New Note' Fix
+- [x] Implement hierarchical PARA rendering in `Sidebar.jsx`.
+- [x] Update `createNote` in `NotesContext.jsx` to default to the active category.
+- [x] Refine Sidebar UI for nested sections (indentation, icons).
+- [x] Verify logic with Browser Subagent.
 **Blockers:** None
 
 
