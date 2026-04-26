@@ -45,12 +45,16 @@ const Sidebar = () => {
     if (searchQuery.trim()) {
       const matchingPaths = new Set();
       Object.values(notes).forEach(note => {
-        const matches = note.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                       note.content.toLowerCase().includes(searchQuery.toLowerCase());
+        const title = note.title || '';
+        const content = note.content || '';
+        const cat = note.category || 'Projects';
+        
+        const matches = title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                       content.toLowerCase().includes(searchQuery.toLowerCase());
         if (matches) {
           // If it's a sub-section note, expand its parent path
-          if (note.category.includes('/')) {
-            matchingPaths.add(note.category);
+          if (cat.includes('/')) {
+            matchingPaths.add(cat);
           }
         }
       });
@@ -233,11 +237,14 @@ const Sidebar = () => {
         {PARA_CATEGORIES.map(mainCategory => {
           // Filter notes that belong to this main category
           const categoryNotes = Object.values(notes).filter(n => {
+            const cat = n.category || 'Projects';
+            const title = n.title || '';
+            const content = n.content || '';
             const matchesSearch = !searchQuery || 
-              n.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-              n.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
-              n.category.toLowerCase().includes(searchQuery.toLowerCase());
-            return n.category.startsWith(mainCategory) && matchesSearch;
+              title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+              content.toLowerCase().includes(searchQuery.toLowerCase()) ||
+              cat.toLowerCase().includes(searchQuery.toLowerCase());
+            return cat.startsWith(mainCategory) && matchesSearch;
           });
 
           // Group by sub-sections
@@ -245,10 +252,11 @@ const Sidebar = () => {
           const rootNotes = [];
 
           categoryNotes.forEach(note => {
-            if (note.category === mainCategory) {
+            const cat = note.category || 'Projects';
+            if (cat === mainCategory) {
               rootNotes.push(note);
             } else {
-              const subSectionName = note.category.replace(`${mainCategory}/`, '');
+              const subSectionName = cat.replace(`${mainCategory}/`, '');
               if (!subSections[subSectionName]) subSections[subSectionName] = [];
               subSections[subSectionName].push(note);
             }

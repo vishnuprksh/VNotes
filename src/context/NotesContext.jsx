@@ -1,4 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import { collection, doc, setDoc, deleteDoc, updateDoc, onSnapshot, writeBatch } from 'firebase/firestore';
+import { db } from '../firebase';
+import { useAuth } from './AuthContext';
 import { INITIAL_NOTES } from '../utils/para';
 import { routeInput, ROUTE_AGENT } from '../agent/agentRouter';
 import { runAgent } from '../agent/agentCore';
@@ -14,18 +17,16 @@ export const useNotesContext = () => {
 };
 
 export const NotesProvider = ({ children }) => {
+  const { currentUser } = useAuth();
+  
   // Notes state
-  const [notes, setNotes] = useState(() => {
-    const saved = localStorage.getItem('vnotes-data');
-    return saved ? JSON.parse(saved) : INITIAL_NOTES;
-  });
-
-  const [activeNoteId, setActiveNoteId] = useState(() => Object.keys(notes)[0] || null);
+  const [notes, setNotes] = useState(INITIAL_NOTES);
+  const [activeNoteId, setActiveNoteId] = useState(() => Object.keys(INITIAL_NOTES)[0] || null);
 
   // Terminal state
   const [terminalLines, setTerminalLines] = useState([
     { type: 'system', text: 'VNotes Agent v2.0.0 ready.' },
-    { type: 'system', text: 'Persistence layer: LocalStorage active.' },
+    { type: 'system', text: 'Persistence layer: Firebase Firestore active.' },
     { type: 'system', text: 'Type /help for commands, or ask me anything naturally.' },
     { type: 'system', text: 'Use /setkey <key> to set your OpenRouter API key.' },
   ]);
@@ -38,17 +39,51 @@ export const NotesProvider = ({ children }) => {
     import.meta.env.VITE_OPENROUTER_API_KEY || ''
   );
 
-  // Persist notes
+  // Fetch notes from Firestore
   useEffect(() => {
-    localStorage.setItem('vnotes-data', JSON.stringify(notes));
-  }, [notes]);
+    if (!currentUser) {
+      setNotes(INITIAL_NOTES);
+      setActiveNoteId(Object.keys(INITIAL_NOTES)[0] || null);
+      return;
+    }
+
+    const notesRef = collection(db, `users/${currentUser.uid}/notes`);
+    const unsubscribe = onSnapshot(notesRef, (snapshot) => {
+      const fetchedNotes = {};
+      snapshot.forEach(doc => {
+        fetchedNotes[doc.id] = doc.data();
+      });
+      
+      // Only update state if there are actual notes or if it's explicitly empty.
+      setNotes(prev => {
+        // Simple merge check could be added, but for now we trust Firestore as source of truth
+        return fetchedNotes;
+      });
+
+      setActiveNoteId(prev => {
+        if (!prev || !fetchedNotes[prev]) {
+          return Object.keys(fetchedNotes)[0] || null;
+        }
+        return prev;
+      });
+    }, (error) => {
+      console.error("Error fetching notes:", error);
+    });
+
+    return () => unsubscribe();
+  }, [currentUser]);
 
   const updateNote = useCallback((id, content) => {
     setNotes(prev => ({
       ...prev,
       [id]: { ...prev[id], content }
     }));
-  }, []);
+    
+    if (currentUser) {
+      const docRef = doc(db, `users/${currentUser.uid}/notes`, id);
+      setDoc(docRef, { content }, { merge: true }).catch(console.error);
+    }
+  }, [currentUser]);
 
   const createNote = useCallback((category) => {
     const defaultCategory = category || (activeNoteId && notes[activeNoteId] ? notes[activeNoteId].category : 'Projects');
@@ -61,10 +96,17 @@ export const NotesProvider = ({ children }) => {
       createdAt: new Date().toISOString(),
       content: '<h2>Untitled Note</h2><p>Start typing...</p>'
     };
+    
     setNotes(prev => ({ ...prev, [id]: newNote }));
     setActiveNoteId(id);
+    
+    if (currentUser) {
+      const docRef = doc(db, `users/${currentUser.uid}/notes`, id);
+      setDoc(docRef, newNote).catch(console.error);
+    }
+    
     return id;
-  }, [activeNoteId, notes]);
+  }, [activeNoteId, notes, currentUser]);
 
   const deleteNote = useCallback((id) => {
     setNotes(prev => {
@@ -72,42 +114,77 @@ export const NotesProvider = ({ children }) => {
       delete next[id];
       return next;
     });
-    setActiveNoteId(prev => (prev === id ? Object.keys(notes)[0] || null : prev));
-  }, [notes]);
+    setActiveNoteId(prev => (prev === id ? null : prev)); // The effect will auto-select the next note
+    
+    if (currentUser) {
+      const docRef = doc(db, `users/${currentUser.uid}/notes`, id);
+      deleteDoc(docRef).catch(console.error);
+    }
+  }, [currentUser]);
 
   const moveNote = useCallback((id, category) => {
     setNotes(prev => ({
       ...prev,
       [id]: { ...prev[id], category }
     }));
-  }, []);
+    
+    if (currentUser) {
+      const docRef = doc(db, `users/${currentUser.uid}/notes`, id);
+      setDoc(docRef, { category }, { merge: true }).catch(console.error);
+    }
+  }, [currentUser]);
 
   const renameSubSection = useCallback((oldPath, newPath) => {
+    const notesToUpdate = [];
     setNotes(prev => {
       const next = { ...prev };
       Object.keys(next).forEach(id => {
         if (next[id].category === oldPath) {
           next[id].category = newPath;
+          notesToUpdate.push({ id, category: newPath });
         } else if (next[id].category.startsWith(`${oldPath}/`)) {
-          next[id].category = next[id].category.replace(oldPath, newPath);
+          const updatedCategory = next[id].category.replace(oldPath, newPath);
+          next[id].category = updatedCategory;
+          notesToUpdate.push({ id, category: updatedCategory });
         }
       });
       return next;
     });
-  }, []);
+    
+    if (currentUser && notesToUpdate.length > 0) {
+      const batch = writeBatch(db);
+      notesToUpdate.forEach(update => {
+        const docRef = doc(db, `users/${currentUser.uid}/notes`, update.id);
+        batch.set(docRef, { category: update.category }, { merge: true });
+      });
+      batch.commit().catch(console.error);
+    }
+  }, [currentUser]);
 
   const deleteSubSection = useCallback((path) => {
     const parentPath = path.split('/').slice(0, -1).join('/') || 'Projects';
+    const notesToUpdate = [];
     setNotes(prev => {
       const next = { ...prev };
       Object.keys(next).forEach(id => {
         if (next[id].category === path || next[id].category.startsWith(`${path}/`)) {
-          next[id].category = next[id].category.replace(path, parentPath);
+          const updatedCategory = next[id].category.replace(path, parentPath);
+          next[id].category = updatedCategory;
+          notesToUpdate.push({ id, category: updatedCategory });
         }
       });
       return next;
     });
-  }, []);
+    
+    if (currentUser && notesToUpdate.length > 0) {
+      const batch = writeBatch(db);
+      notesToUpdate.forEach(update => {
+        const docRef = doc(db, `users/${currentUser.uid}/notes`, update.id);
+        batch.set(docRef, { category: update.category }, { merge: true });
+      });
+      batch.commit().catch(console.error);
+    }
+  }, [currentUser]);
 
   // ─── Agent pipeline ────────────────────────────────────────────────────────
   const runAgentQuery = useCallback((query, currentNotes) => {

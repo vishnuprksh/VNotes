@@ -14,4 +14,7 @@
 - **Decision:** Client-side TF-IDF vector search + OpenRouter streaming (`z-ai/glm-4.5-air:free`). No new npm packages. Agent has read-only access (frozen notes snapshot). API key stored in `apiKeyRef` in-memory, set via `/setkey` terminal command.
 - **Reasoning:** Keeps the app pure-frontend. TF-IDF is fast, free, and sufficient for personal notes. Streaming gives a live terminal feel. Read-only by design — agent cannot write.
 - **Terminal line format changed:** Lines are now typed objects `{ type, text, id?, streaming? }` not plain strings. This allows per-type rendering (agent vs user vs error vs system).
-
+### 2026-04-26 - Firestore Migration
+- **Context:** User requested to use Firebase Firestore instead of LocalStorage for notes database.
+- **Decision:** Replaced `localStorage` persistence in `NotesContext.jsx` with Firestore `onSnapshot` for real-time syncing and `setDoc`/`deleteDoc`/`writeBatch` for mutations. Secured access using `firestore.rules`.
+- **Reasoning:** LocalStorage lacks cross-device sync and durability. Firestore offers a seamless real-time document database that integrates natively with the recently added Google Authentication, allowing robust multi-device synchronization per user.

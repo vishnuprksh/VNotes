@@ -19,4 +19,9 @@
 - [x] Implement `src/firebase.js`
 - [x] Update UI (`Sidebar.jsx`) with Google Sign-In button
 
+- [x] **Current Focus:** Firestore Migration
+- [x] Initialize Firebase Firestore
+- [x] Implement `src/firebase.js` with `db`
+- [x] Refactor `NotesContext.jsx` to sync with Firestore
+
 **Blockers:** None
