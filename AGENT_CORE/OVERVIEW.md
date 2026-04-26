@@ -1,5 +1,8 @@
 # Project Overview: VNotes
-**North Star:** Create an agentic minimalist editor that leverages AI for streamlined note-taking and editing, accessible anywhere as a PWA.
-**Core Architecture:** Vite + React (Modular Components), Tiptap Editor, LocalStorage Persistence, Hierarchical PARA Structure (Sub-sections).
-**Guiding Principles:** Minimalist focus, agentic terminal intervention, and PARA structure for knowledge management (Projects, Areas, Resources, Archives).
-**Constraints:** Single-page application logic, theme consistency.
+**North Star:** A high-performance, PARA-organized note-taking app with a terminal-first power-user workflow.
+**Core Architecture:** React (Vite), Tiptap Editor, Framer Motion, Context API for state management.
+**Guiding Principles:** 
+- Premium Aesthetics (Glassmorphism, Dark Mode).
+- Zero-click interaction patterns (Inline renaming, automatic focus).
+- PARA Structure (Projects, Areas, Resources, Archives).
+**Constraints:** Desktop-first, local storage persistence for now.

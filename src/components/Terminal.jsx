@@ -19,9 +19,9 @@ const Terminal = () => {
           Agentic Terminal
         </div>
         <div className="top-bar-actions" style={{ fontSize: '0.6rem' }}>
-          <i className="fas fa-minus"></i>
-          <i className="fas fa-expand-alt"></i>
-          <i className="fas fa-times"></i>
+          <i className="fas fa-minus" title="Minimize Terminal"></i>
+          <i className="fas fa-expand-alt" title="Expand Terminal"></i>
+          <i className="fas fa-times" title="Close Terminal"></i>
         </div>
       </div>
       <div className="terminal-body" style={{ overflowY: 'auto', height: 'calc(100% - 25px)' }}>

@@ -82,6 +82,8 @@ body {
     position: relative;
     z-index: 10;
     box-shadow: 10px 0 30px rgba(0, 0, 0, 0.2);
+    height: 100vh;
+    overflow: hidden; /* Prevent sidebar itself from scrolling */
 }
 
 .brand {
@@ -147,8 +149,9 @@ body {
 .nav-group {
     flex: 1;
     overflow-y: auto;
-    margin-right: -1rem; /* Adjust for scrollbar if needed */
-    padding-right: 1rem;
+    overflow-x: hidden;
+    margin-right: -0.5rem; 
+    padding-right: 0.5rem;
 }
 
 /* Scrollbar Styling */
@@ -283,6 +286,24 @@ body {
 
 .sub-title {
     flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.inline-rename-input {
+    background: var(--surface-container-highest);
+    border: 1px solid var(--primary);
+    border-radius: 4px;
+    color: var(--on-surface);
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1rem;
+    padding: 2px 4px;
+    width: 100%;
+    outline: none;
+    font-family: inherit;
 }
 
 .add-note-inline-btn {

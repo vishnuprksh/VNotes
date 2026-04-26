@@ -113,6 +113,8 @@ export const NotesProvider = ({ children }) => {
         newLines.push('  /create [category] - Create a new note');
         newLines.push('  /delete - Delete active note');
         newLines.push('  /move [category] - Move active note to category');
+        newLines.push('  /search [query] - Filter notes by title/content');
+        newLines.push('  /clear-search - Reset sidebar search');
         newLines.push('  /list - List all notes by PARA');
         newLines.push('  /clear - Clear terminal');
         break;
@@ -143,6 +145,19 @@ export const NotesProvider = ({ children }) => {
         Object.values(notes).forEach(n => {
           newLines.push(`- [${n.category}] ${n.title}`);
         });
+        break;
+      case '/search':
+        const query = args.slice(1).join(' ');
+        if (query) {
+          setSearchQuery(query);
+          newLines.push(`Searching for: "${query}"`);
+        } else {
+          newLines.push('Usage: /search [query]');
+        }
+        break;
+      case '/clear-search':
+        setSearchQuery('');
+        newLines.push('Search filter cleared.');
         break;
       case '/clear':
         setTerminalLines([]);

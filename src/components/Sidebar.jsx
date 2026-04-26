@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { PARA_CATEGORIES, CATEGORY_ICONS } from '../utils/para';
 import { useNotesContext } from '../context/NotesContext';
 import ContextMenu from './ContextMenu';
@@ -25,7 +25,43 @@ const Sidebar = () => {
     target: null 
   });
 
-  const [expandedSections, setExpandedSections] = useState(new Set());
+  const [expandedSections, setExpandedSections] = useState(() => {
+    const saved = localStorage.getItem('vnotes-expanded-sections');
+    return saved ? new Set(JSON.parse(saved)) : new Set();
+  });
+
+  const [editingSection, setEditingSection] = useState(null); // path
+  const [editValue, setEditValue] = useState('');
+
+  // Persist expanded sections
+  useEffect(() => {
+    localStorage.setItem('vnotes-expanded-sections', JSON.stringify(Array.from(expandedSections)));
+  }, [expandedSections]);
+
+  // Auto-expand sections on search
+  useEffect(() => {
+    if (searchQuery.trim()) {
+      const matchingPaths = new Set();
+      Object.values(notes).forEach(note => {
+        const matches = note.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                       note.content.toLowerCase().includes(searchQuery.toLowerCase());
+        if (matches) {
+          // If it's a sub-section note, expand its parent path
+          if (note.category.includes('/')) {
+            matchingPaths.add(note.category);
+          }
+        }
+      });
+
+      if (matchingPaths.size > 0) {
+        setExpandedSections(prev => {
+          const next = new Set(prev);
+          matchingPaths.forEach(p => next.add(p));
+          return next;
+        });
+      }
+    }
+  }, [searchQuery, notes]);
 
   const toggleSection = (e, path) => {
     e.stopPropagation();
@@ -92,14 +128,41 @@ const Sidebar = () => {
 
   const handleRename = () => {
     if (contextMenu.type === 'subsection') {
-      const newName = prompt('Enter new name for this sub-section:', contextMenu.target.split('/').pop());
-      if (newName) {
-        const parentPath = contextMenu.target.split('/').slice(0, -1).join('/');
-        const newPath = `${parentPath}/${newName}`;
-        renameSubSection(contextMenu.target, newPath);
-      }
+      setEditingSection(contextMenu.target);
+      setEditValue(contextMenu.target.split('/').pop());
     }
     handleCloseContextMenu();
+  };
+
+  const handleFinishRename = () => {
+    if (!editingSection || !editValue.trim()) {
+      setEditingSection(null);
+      return;
+    }
+
+    const oldPath = editingSection;
+    const parentPath = oldPath.split('/').slice(0, -1).join('/');
+    const newPath = `${parentPath}/${editValue.trim()}`;
+    
+    if (oldPath !== newPath) {
+      renameSubSection(oldPath, newPath);
+      
+      // Update expansion state if the path changed
+      if (expandedSections.has(oldPath)) {
+        setExpandedSections(prev => {
+          const next = new Set(prev);
+          next.delete(oldPath);
+          next.add(newPath);
+          return next;
+        });
+      }
+    }
+    
+    setEditingSection(null);
+  };
+
+  const handleCancelRename = () => {
+    setEditingSection(null);
   };
 
   const renderNoteItem = (note) => (
@@ -115,14 +178,28 @@ const Sidebar = () => {
 
   const handleAddSubSection = (e, mainCategory) => {
     e.stopPropagation();
-    const subName = prompt(`Enter sub-section name for ${mainCategory}:`);
-    if (subName) {
-      const fullPath = `${mainCategory}/${subName}`;
-      // Creating a sub-section is represented by creating a placeholder note
-      createNote(fullPath);
-      // Automatically expand the new section
-      setExpandedSections(prev => new Set(prev).add(fullPath));
+    
+    // Find existing sub-sections for this main category to avoid name collisions
+    const subSectionNames = new Set(
+      Object.values(notes)
+        .filter(n => n.category.startsWith(`${mainCategory}/`))
+        .map(n => n.category.split('/')[1])
+    );
+
+    let subName = 'Untitled Section';
+    let counter = 1;
+    while (subSectionNames.has(subName)) {
+      subName = `Untitled Section ${++counter}`;
     }
+
+    const fullPath = `${mainCategory}/${subName}`;
+    // Creating a sub-section is represented by creating a placeholder note
+    createNote(fullPath);
+    // Automatically expand the new section
+    setExpandedSections(prev => new Set(prev).add(fullPath));
+    // Trigger rename mode immediately
+    setEditingSection(fullPath);
+    setEditValue(subName);
   };
 
   const handleAddNoteToSubSection = (e, fullPath) => {
@@ -156,7 +233,8 @@ const Sidebar = () => {
           const categoryNotes = Object.values(notes).filter(n => {
             const matchesSearch = !searchQuery || 
               n.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-              n.content.toLowerCase().includes(searchQuery.toLowerCase());
+              n.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
+              n.category.toLowerCase().includes(searchQuery.toLowerCase());
             return n.category.startsWith(mainCategory) && matchesSearch;
           });
 
@@ -173,6 +251,8 @@ const Sidebar = () => {
               subSections[subSectionName].push(note);
             }
           });
+
+          if (searchQuery.trim() && categoryNotes.length === 0) return null;
 
           return (
             <div key={mainCategory} className="nav-section">
@@ -205,7 +285,22 @@ const Sidebar = () => {
                         onContextMenu={(e) => handleContextMenu(e, fullSubPath, 'subsection')}
                       >
                         <i className={`fas fa-chevron-right ${isExpanded ? 'rotated' : ''}`}></i>
-                        <span className="sub-title">{subName}</span>
+                        {editingSection === fullSubPath ? (
+                          <input 
+                            autoFocus
+                            className="inline-rename-input"
+                            value={editValue}
+                            onChange={(e) => setEditValue(e.target.value)}
+                            onBlur={handleFinishRename}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') handleFinishRename();
+                              if (e.key === 'Escape') handleCancelRename();
+                            }}
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        ) : (
+                          <span className="sub-title">{subName}</span>
+                        )}
                         <button 
                           className="add-note-inline-btn" 
                           onClick={(e) => handleAddNoteToSubSection(e, fullSubPath)}
