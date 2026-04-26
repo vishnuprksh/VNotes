@@ -28,3 +28,18 @@
 - **Context:** Render failed to parse the blueprint due to incorrect field names.
 - **Decision:** Updated 'publishPath' to 'staticPublishPath' and added explicit SPA routing in render.yaml.
 - **Reasoning:** 'staticPublishPath' is the correct field for static sites in the Render Blueprint spec.
+31: 
+32: ### 2026-04-26 - Render MCP Setup
+33: - **Context:** User requested setting up MCP for Render management.
+34: - **Decision:** Configured `@render-oss/mcp-server-render` in `mcp_config.json` with the provided API key.
+35: - **Reasoning:** Enables agentic control over Render services, builds, and logs directly from the assistant.
+36: 
+37: ### 2026-04-26 - Render MCP Configuration Fix
+38: - **Context:** Encountered 404 error when trying to fetch `@render-oss/mcp-server-render`.
+39: - **Decision:** Switched to the official hosted URL `https://mcp.render.com/mcp` using `mcp-remote`.
+40: - **Reasoning:** The official hosted URL is the recommended way to integrate with Render's MCP and avoids package registry issues.
+
+### 2026-04-26 - Deployment Troubleshooting
+- **Context:** Render build failed due to React 19 peer dependency conflicts with react-markdown-editor-lite.
+- **Decision:** Created .npmrc with legacy-peer-deps=true and updated render.yaml.
+- **Reasoning:** .npmrc ensures npm install succeeds even with peer dependency conflicts, which is necessary when using libraries that haven't updated for React 19 yet.

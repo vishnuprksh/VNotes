@@ -11,6 +11,8 @@
 - [x] Enhance Agentic Terminal with functional commands (/create, /delete, /move).
 - [x] Polish UI/UX with glassmorphism and smooth transitions.
 - [x] Add Search and Tagging functionality.
+- [x] Setup Render MCP (Fixed to official hosted URL).
+- [x] Test Render MCP Connection (Manual API verification successful).
 **Blockers:** None
 
 
