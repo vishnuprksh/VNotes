@@ -23,3 +23,13 @@
 - **Context:** Verifying Firebase integration in browser.
 - **Decision:** Added defensive fallbacks (`|| 'Projects'`) to note metadata access in `Editor.jsx`. Confirmed `Cross-Origin-Opener-Policy` warnings during Firebase Auth popup are non-blocking warnings in Vite local development and the auth lifecycle completes successfully.
 - **Reasoning:** Since Firebase Firestore relies on user data, edge cases where a newly created/synced note lacks optional fields (like `category`) can cause string method crashes (`toLowerCase()`). COOP warnings are acceptable during local dev as long as the popup resolves.
+
+### 2026-04-26 - Server Maintenance
+- **Context:** User requested to kill all ports and restart localhost.
+- **Decision:** Killed processes on ports 5173-5176 and restarted Vite.
+- **Reasoning:** Cleaning up stale development processes ensures a fresh state and consistent port mapping (reverted to default 5173).
+
+### 2026-04-26 - Context Menu & State Stability Fix
+- **Context:** Right-clicking on notes/sub-sections caused an app crash (blank screen) and premature `window.confirm` dialogs.
+- **Decision:** Gracefully handle `undefined` categories in `allCategories` sorting to prevent `localeCompare` crashes. Refactor `NotesContext.jsx` to avoid direct state mutations. Rewrote `Sidebar.jsx` navigation to fix a corruption where nested maps were incorrectly interleaved.
+- **Reasoning:** The corruption was likely the primary cause of the "blank screen" crash and broken interactions. Restoring a clean, hierarchical rendering logic ensures the context menu targets the correct IDs and paths.

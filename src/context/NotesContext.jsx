@@ -51,7 +51,7 @@ export const NotesProvider = ({ children }) => {
     const unsubscribe = onSnapshot(notesRef, (snapshot) => {
       const fetchedNotes = {};
       snapshot.forEach(doc => {
-        fetchedNotes[doc.id] = doc.data();
+        fetchedNotes[doc.id] = { ...doc.data(), id: doc.id };
       });
       
       // Only update state if there are actual notes or if it's explicitly empty.
@@ -140,11 +140,13 @@ export const NotesProvider = ({ children }) => {
       const next = { ...prev };
       Object.keys(next).forEach(id => {
         if (next[id].category === oldPath) {
-          next[id].category = newPath;
+          const updatedNote = { ...next[id], category: newPath };
+          next[id] = updatedNote;
           notesToUpdate.push({ id, category: newPath });
-        } else if (next[id].category.startsWith(`${oldPath}/`)) {
+        } else if (next[id].category && next[id].category.startsWith(`${oldPath}/`)) {
           const updatedCategory = next[id].category.replace(oldPath, newPath);
-          next[id].category = updatedCategory;
+          const updatedNote = { ...next[id], category: updatedCategory };
+          next[id] = updatedNote;
           notesToUpdate.push({ id, category: updatedCategory });
         }
       });
@@ -167,9 +169,10 @@ export const NotesProvider = ({ children }) => {
     setNotes(prev => {
       const next = { ...prev };
       Object.keys(next).forEach(id => {
-        if (next[id].category === path || next[id].category.startsWith(`${path}/`)) {
+        if (next[id].category === path || (next[id].category && next[id].category.startsWith(`${path}/`))) {
           const updatedCategory = next[id].category.replace(path, parentPath);
-          next[id].category = updatedCategory;
+          const updatedNote = { ...next[id], category: updatedCategory };
+          next[id] = updatedNote;
           notesToUpdate.push({ id, category: updatedCategory });
         }
       });

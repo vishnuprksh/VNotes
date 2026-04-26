@@ -25,4 +25,11 @@
 - [x] Refactor `NotesContext.jsx` to sync with Firestore
 - [x] Verify Firebase integration in browser (Auth and Editor load)
 
+- [x] **Current Focus:** Fix Right-Click Delete Functionality
+- [x] Debug why right-click delete on notes and subsections is failing (found corrupted code in `Sidebar.jsx`).
+- [x] Fix state mutation bugs in `NotesContext.jsx`.
+- [x] Restore `Sidebar.jsx` navigation and hierarchy logic.
+- [x] Fix context menu clipping issue in `Sidebar.jsx` by ensuring `ContextMenu` is outside filtered containers.
+- [ ] Verify fix in browser.
+
 **Blockers:** None

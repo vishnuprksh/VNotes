@@ -21,11 +21,27 @@ const ContextMenu = ({ x, y, visible, onClose, onMove, onDelete, onRename, categ
 
   const isNote = type === 'note';
 
+  const menuStyle = {
+    top: y,
+    left: x,
+  };
+
+  // Viewport safeguards
+  if (menuRef.current) {
+    const { offsetWidth, offsetHeight } = menuRef.current;
+    if (x + offsetWidth > window.innerWidth) {
+      menuStyle.left = x - offsetWidth;
+    }
+    if (y + offsetHeight > window.innerHeight) {
+      menuStyle.top = y - offsetHeight;
+    }
+  }
+
   return (
     <div 
       ref={menuRef}
       className="context-menu" 
-      style={{ top: y, left: x }}
+      style={menuStyle}
     >
       {isNote ? (
         <>

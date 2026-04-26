@@ -85,15 +85,18 @@ const Sidebar = () => {
   // Calculate all unique categories for the 'Move To' menu
   const allCategories = useMemo(() => {
     const cats = new Set(PARA_CATEGORIES);
-    Object.values(notes).forEach(n => cats.add(n.category));
-    return Array.from(cats).sort((a, b) => {
-      // Sort main categories first, then sub-sections
-      const aIsMain = PARA_CATEGORIES.includes(a);
-      const bIsMain = PARA_CATEGORIES.includes(b);
-      if (aIsMain && !bIsMain) return -1;
-      if (!aIsMain && bIsMain) return 1;
-      return a.localeCompare(b);
+    Object.values(notes).forEach(n => {
+      if (n && n.category) cats.add(n.category);
     });
+    return Array.from(cats)
+      .filter(c => c && typeof c === 'string')
+      .sort((a, b) => {
+        const aIsMain = PARA_CATEGORIES.includes(a);
+        const bIsMain = PARA_CATEGORIES.includes(b);
+        if (aIsMain && !bIsMain) return -1;
+        if (!aIsMain && bIsMain) return 1;
+        return a.localeCompare(b);
+      });
   }, [notes]);
 
   const handleContextMenu = (e, id, type) => {
@@ -109,7 +112,7 @@ const Sidebar = () => {
   };
 
   const handleCloseContextMenu = () => {
-    setContextMenu({ ...contextMenu, visible: false });
+    setContextMenu(prev => ({ ...prev, visible: false }));
   };
 
   const handleMoveNote = (category) => {
@@ -128,6 +131,9 @@ const Sidebar = () => {
       if (window.confirm(`Delete section "${contextMenu.target}" and move all notes to parent?`)) {
         deleteSubSection(contextMenu.target);
       }
+    } else if (contextMenu.type === 'section') {
+      // For top level sections, maybe just prevent deletion or handle differently
+      alert('Cannot delete top-level PARA categories.');
     }
     handleCloseContextMenu();
   };
@@ -147,13 +153,13 @@ const Sidebar = () => {
     }
 
     const oldPath = editingSection;
-    const parentPath = oldPath.split('/').slice(0, -1).join('/');
+    const parts = oldPath.split('/');
+    const parentPath = parts.slice(0, -1).join('/');
     const newPath = `${parentPath}/${editValue.trim()}`;
     
     if (oldPath !== newPath) {
       renameSubSection(oldPath, newPath);
       
-      // Update expansion state if the path changed
       if (expandedSections.has(oldPath)) {
         setExpandedSections(prev => {
           const next = new Set(prev);
@@ -171,24 +177,12 @@ const Sidebar = () => {
     setEditingSection(null);
   };
 
-  const renderNoteItem = (note) => (
-    <li 
-      key={note.id} 
-      className={`nav-sub-item ${activeNoteId === note.id ? 'active' : ''}`}
-      onClick={() => setActiveNoteId(note.id)}
-      onContextMenu={(e) => handleContextMenu(e, note.id, 'note')}
-    >
-      {note.title}
-    </li>
-  );
-
   const handleAddSubSection = (e, mainCategory) => {
     e.stopPropagation();
     
-    // Find existing sub-sections for this main category to avoid name collisions
     const subSectionNames = new Set(
       Object.values(notes)
-        .filter(n => n.category.startsWith(`${mainCategory}/`))
+        .filter(n => n.category && n.category.startsWith(`${mainCategory}/`))
         .map(n => n.category.split('/')[1])
     );
 
@@ -199,11 +193,8 @@ const Sidebar = () => {
     }
 
     const fullPath = `${mainCategory}/${subName}`;
-    // Creating a sub-section is represented by creating a placeholder note
     createNote(fullPath);
-    // Automatically expand the new section
     setExpandedSections(prev => new Set(prev).add(fullPath));
-    // Trigger rename mode immediately
     setEditingSection(fullPath);
     setEditValue(subName);
   };
@@ -211,7 +202,6 @@ const Sidebar = () => {
   const handleAddNoteToSubSection = (e, fullPath) => {
     e.stopPropagation();
     createNote(fullPath);
-    // Ensure it's expanded so user sees the new note
     if (!expandedSections.has(fullPath)) {
       setExpandedSections(prev => new Set(prev).add(fullPath));
     }
@@ -235,7 +225,7 @@ const Sidebar = () => {
       <nav className="nav-group">
         <div className="nav-header">BRAIN</div>
         {PARA_CATEGORIES.map(mainCategory => {
-          // Filter notes that belong to this main category
+          // Filter notes for this main category
           const categoryNotes = Object.values(notes).filter(n => {
             const cat = n.category || 'Projects';
             const title = n.title || '';
@@ -255,10 +245,10 @@ const Sidebar = () => {
             const cat = note.category || 'Projects';
             if (cat === mainCategory) {
               rootNotes.push(note);
-            } else {
-              const subSectionName = cat.replace(`${mainCategory}/`, '');
-              if (!subSections[subSectionName]) subSections[subSectionName] = [];
-              subSections[subSectionName].push(note);
+            } else if (cat.startsWith(`${mainCategory}/`)) {
+              const subName = cat.split('/')[1];
+              if (!subSections[subName]) subSections[subName] = [];
+              subSections[subName].push(note);
             }
           });
 
@@ -266,36 +256,46 @@ const Sidebar = () => {
 
           return (
             <div key={mainCategory} className="nav-section">
-              <div className="nav-item category-header">
+              <div 
+                className="category-header"
+                onContextMenu={(e) => handleContextMenu(e, mainCategory, 'section')}
+              >
                 <div className="cat-title">
                   <i className={CATEGORY_ICONS[mainCategory]}></i>
-                  {mainCategory}
+                  <span>{mainCategory}</span>
                 </div>
-                <button className="add-sub-btn" onClick={(e) => handleAddSubSection(e, mainCategory)} title="Add sub-section">
+                <button className="add-sub-btn" onClick={(e) => handleAddSubSection(e, mainCategory)}>
                   <i className="fas fa-plus"></i>
                 </button>
               </div>
               
               <div className="nav-hierarchy">
-                {/* Root notes in this category */}
                 <ul className="nav-sub-list">
-                  {rootNotes.map(renderNoteItem)}
+                  {rootNotes.map(note => (
+                    <li 
+                      key={`note-${note.id}`} 
+                      className={`nav-sub-item ${activeNoteId === note.id ? 'active' : ''}`}
+                      onClick={() => setActiveNoteId(note.id)}
+                      onContextMenu={(e) => handleContextMenu(e, note.id, 'note')}
+                    >
+                      {note.title}
+                    </li>
+                  ))}
                 </ul>
 
-                {/* Sub-sections */}
-                {Object.entries(subSections).map(([subName, subNotes]) => {
-                  const fullSubPath = `${mainCategory}/${subName}`;
-                  const isExpanded = expandedSections.has(fullSubPath);
+                {Object.entries(subSections).map(([subName, notes]) => {
+                  const fullPath = `${mainCategory}/${subName}`;
+                  const isExpanded = expandedSections.has(fullPath);
                   
                   return (
                     <div key={subName} className={`nav-subsection ${isExpanded ? 'expanded' : ''}`}>
                       <div 
                         className="subsection-header"
-                        onClick={(e) => toggleSection(e, fullSubPath)}
-                        onContextMenu={(e) => handleContextMenu(e, fullSubPath, 'subsection')}
+                        onClick={(e) => toggleSection(e, fullPath)}
+                        onContextMenu={(e) => handleContextMenu(e, fullPath, 'subsection')}
                       >
                         <i className={`fas fa-chevron-right ${isExpanded ? 'rotated' : ''}`}></i>
-                        {editingSection === fullSubPath ? (
+                        {editingSection === fullPath ? (
                           <input 
                             autoFocus
                             className="inline-rename-input"
@@ -313,15 +313,23 @@ const Sidebar = () => {
                         )}
                         <button 
                           className="add-note-inline-btn" 
-                          onClick={(e) => handleAddNoteToSubSection(e, fullSubPath)}
-                          title="Add note to section"
+                          onClick={(e) => handleAddNoteToSubSection(e, fullPath)}
                         >
                           <i className="fas fa-plus"></i>
                         </button>
                       </div>
                       {isExpanded && (
                         <ul className="nav-sub-list nested">
-                          {subNotes.map(renderNoteItem)}
+                          {notes.map(note => (
+                            <li 
+                              key={`note-${note.id}`} 
+                              className={`nav-sub-item ${activeNoteId === note.id ? 'active' : ''}`}
+                              onClick={() => setActiveNoteId(note.id)}
+                              onContextMenu={(e) => handleContextMenu(e, note.id, 'note')}
+                            >
+                              {note.title}
+                            </li>
+                          ))}
                         </ul>
                       )}
                     </div>
