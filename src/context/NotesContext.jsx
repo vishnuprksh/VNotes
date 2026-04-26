@@ -74,6 +74,34 @@ export const NotesProvider = ({ children }) => {
     }));
   }, []);
 
+  const renameSubSection = useCallback((oldPath, newPath) => {
+    setNotes(prev => {
+      const next = { ...prev };
+      Object.keys(next).forEach(id => {
+        if (next[id].category === oldPath) {
+          next[id].category = newPath;
+        } else if (next[id].category.startsWith(`${oldPath}/`)) {
+          next[id].category = next[id].category.replace(oldPath, newPath);
+        }
+      });
+      return next;
+    });
+  }, []);
+
+  const deleteSubSection = useCallback((path) => {
+    // Moves notes in the sub-section to the parent category
+    const parentPath = path.split('/').slice(0, -1).join('/') || 'Projects';
+    setNotes(prev => {
+      const next = { ...prev };
+      Object.keys(next).forEach(id => {
+        if (next[id].category === path || next[id].category.startsWith(`${path}/`)) {
+          next[id].category = next[id].category.replace(path, parentPath);
+        }
+      });
+      return next;
+    });
+  }, []);
+
   const executeCommand = (input) => {
     const args = input.trim().split(' ');
     const command = args[0].toLowerCase();
@@ -139,6 +167,8 @@ export const NotesProvider = ({ children }) => {
     createNote,
     deleteNote,
     moveNote,
+    renameSubSection,
+    deleteSubSection,
     executeCommand
   };
 

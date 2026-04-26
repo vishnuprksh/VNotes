@@ -1,19 +1,111 @@
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { PARA_CATEGORIES, CATEGORY_ICONS } from '../utils/para';
 import { useNotesContext } from '../context/NotesContext';
+import ContextMenu from './ContextMenu';
 
 const Sidebar = () => {
-  const { notes, activeNoteId, setActiveNoteId, createNote, searchQuery } = useNotesContext();
+  const { 
+    notes, 
+    activeNoteId, 
+    setActiveNoteId, 
+    createNote, 
+    deleteNote, 
+    moveNote, 
+    renameSubSection, 
+    deleteSubSection, 
+    searchQuery 
+  } = useNotesContext();
+  
+  const [contextMenu, setContextMenu] = useState({ 
+    visible: false, 
+    x: 0, 
+    y: 0, 
+    noteId: null, 
+    type: 'note', 
+    target: null 
+  });
+
+  // Calculate all unique categories for the 'Move To' menu
+  const allCategories = useMemo(() => {
+    const cats = new Set(PARA_CATEGORIES);
+    Object.values(notes).forEach(n => cats.add(n.category));
+    return Array.from(cats).sort((a, b) => {
+      // Sort main categories first, then sub-sections
+      const aIsMain = PARA_CATEGORIES.includes(a);
+      const bIsMain = PARA_CATEGORIES.includes(b);
+      if (aIsMain && !bIsMain) return -1;
+      if (!aIsMain && bIsMain) return 1;
+      return a.localeCompare(b);
+    });
+  }, [notes]);
+
+  const handleContextMenu = (e, id, type) => {
+    e.preventDefault();
+    setContextMenu({
+      visible: true,
+      x: e.clientX,
+      y: e.clientY,
+      noteId: type === 'note' ? id : null,
+      type,
+      target: id // id or category path
+    });
+  };
+
+  const handleCloseContextMenu = () => {
+    setContextMenu({ ...contextMenu, visible: false });
+  };
+
+  const handleMoveNote = (category) => {
+    if (contextMenu.noteId) {
+      moveNote(contextMenu.noteId, category);
+      handleCloseContextMenu();
+    }
+  };
+
+  const handleDelete = () => {
+    if (contextMenu.type === 'note' && contextMenu.noteId) {
+      if (window.confirm('Delete this note?')) {
+        deleteNote(contextMenu.noteId);
+      }
+    } else if (contextMenu.type === 'subsection') {
+      if (window.confirm(`Delete section "${contextMenu.target}" and move all notes to parent?`)) {
+        deleteSubSection(contextMenu.target);
+      }
+    }
+    handleCloseContextMenu();
+  };
+
+  const handleRename = () => {
+    if (contextMenu.type === 'subsection') {
+      const newName = prompt('Enter new name for this sub-section:', contextMenu.target.split('/').pop());
+      if (newName) {
+        const parentPath = contextMenu.target.split('/').slice(0, -1).join('/');
+        const newPath = `${parentPath}/${newName}`;
+        renameSubSection(contextMenu.target, newPath);
+      }
+    }
+    handleCloseContextMenu();
+  };
 
   const renderNoteItem = (note) => (
     <li 
       key={note.id} 
       className={`nav-sub-item ${activeNoteId === note.id ? 'active' : ''}`}
       onClick={() => setActiveNoteId(note.id)}
+      onContextMenu={(e) => handleContextMenu(e, note.id, 'note')}
     >
       {note.title}
     </li>
   );
+
+  const handleAddSubSection = (e, mainCategory) => {
+    e.stopPropagation();
+    const subName = prompt(`Enter sub-section name for ${mainCategory}:`);
+    if (subName) {
+      const fullPath = `${mainCategory}/${subName}`;
+      createNote(fullPath);
+    }
+  };
 
   return (
     <aside className="sidebar">
@@ -58,8 +150,13 @@ const Sidebar = () => {
           return (
             <div key={mainCategory} className="nav-section">
               <div className="nav-item category-header">
-                <i className={CATEGORY_ICONS[mainCategory]}></i>
-                {mainCategory}
+                <div className="cat-title">
+                  <i className={CATEGORY_ICONS[mainCategory]}></i>
+                  {mainCategory}
+                </div>
+                <button className="add-sub-btn" onClick={(e) => handleAddSubSection(e, mainCategory)} title="Add sub-section">
+                  <i className="fas fa-plus"></i>
+                </button>
               </div>
               
               <div className="nav-hierarchy">
@@ -69,17 +166,23 @@ const Sidebar = () => {
                 </ul>
 
                 {/* Sub-sections */}
-                {Object.entries(subSections).map(([subName, subNotes]) => (
-                  <div key={subName} className="nav-subsection">
-                    <div className="subsection-header">
-                      <i className="fas fa-chevron-right"></i>
-                      {subName}
+                {Object.entries(subSections).map(([subName, subNotes]) => {
+                  const fullSubPath = `${mainCategory}/${subName}`;
+                  return (
+                    <div key={subName} className="nav-subsection">
+                      <div 
+                        className="subsection-header"
+                        onContextMenu={(e) => handleContextMenu(e, fullSubPath, 'subsection')}
+                      >
+                        <i className="fas fa-chevron-right"></i>
+                        {subName}
+                      </div>
+                      <ul className="nav-sub-list nested">
+                        {subNotes.map(renderNoteItem)}
+                      </ul>
                     </div>
-                    <ul className="nav-sub-list nested">
-                      {subNotes.map(renderNoteItem)}
-                    </ul>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           );
@@ -90,6 +193,19 @@ const Sidebar = () => {
         <div className="sidebar-item"><i className="fas fa-search"></i> Search</div>
         <div className="sidebar-item"><i className="fas fa-cog"></i> Settings</div>
       </div>
+
+      <ContextMenu 
+        x={contextMenu.x}
+        y={contextMenu.y}
+        visible={contextMenu.visible}
+        type={contextMenu.type}
+        target={contextMenu.target}
+        onClose={handleCloseContextMenu}
+        onMove={handleMoveNote}
+        onDelete={handleDelete}
+        onRename={handleRename}
+        categories={allCategories}
+      />
     </aside>
   );
 };

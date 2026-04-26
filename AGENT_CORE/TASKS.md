@@ -18,6 +18,13 @@
 - [x] Update `createNote` in `NotesContext.jsx` to default to the active category.
 - [x] Refine Sidebar UI for nested sections (indentation, icons).
 - [x] Verify logic with Browser Subagent.
+- [x] **Current Focus:** Sidebar UX & Context Menus
+- [x] Make sidebar scrollable.
+- [x] Add UI option to create sub-sections.
+- [x] Implement right-click context menu for notes (Move, Delete).
+- [x] **Next Step:** Advanced Sub-section Management
+- [x] Allow moving notes directly into sub-sections via Context Menu.
+- [x] Add Rename/Delete options for sub-sections.
 **Blockers:** None
 
 

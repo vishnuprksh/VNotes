@@ -144,6 +144,31 @@ body {
     color: var(--primary);
 }
 
+.nav-group {
+    flex: 1;
+    overflow-y: auto;
+    margin-right: -1rem; /* Adjust for scrollbar if needed */
+    padding-right: 1rem;
+}
+
+/* Scrollbar Styling */
+.nav-group::-webkit-scrollbar {
+    width: 4px;
+}
+
+.nav-group::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.nav-group::-webkit-scrollbar-thumb {
+    background: var(--outline-variant);
+    border-radius: 10px;
+}
+
+.nav-group::-webkit-scrollbar-thumb:hover {
+    background: var(--outline);
+}
+
 .nav-section {
     margin-bottom: 1.5rem;
 }
@@ -161,10 +186,36 @@ body {
     font-size: 0.85rem;
     display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: 0.75rem;
     color: var(--on-surface-variant);
     margin-bottom: 0.5rem;
     padding: 0.25rem 0.5rem;
+}
+
+.cat-title {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.add-sub-btn {
+    background: none;
+    border: none;
+    color: var(--outline);
+    cursor: pointer;
+    opacity: 0;
+    transition: all 0.2s;
+    font-size: 0.7rem;
+    padding: 2px;
+}
+
+.category-header:hover .add-sub-btn {
+    opacity: 1;
+}
+
+.add-sub-btn:hover {
+    color: var(--primary);
 }
 
 .category-header i {
@@ -531,4 +582,87 @@ ul[data-type="taskList"] input[type="checkbox"] {
 
 .app-container {
     animation: fadeIn 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Context Menu */
+.context-menu {
+    position: fixed;
+    z-index: 1000;
+    background: var(--surface-container-high);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--outline-variant);
+    border-radius: 10px;
+    padding: 0.5rem;
+    min-width: 160px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+    animation: menuFadeIn 0.2s ease;
+}
+
+@keyframes menuFadeIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+.context-menu .menu-item {
+    padding: 0.6rem 0.75rem;
+    font-size: 0.8rem;
+    color: var(--on-surface-variant);
+    cursor: pointer;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    transition: all 0.2s;
+}
+
+.context-menu .menu-item:hover {
+    background-color: var(--surface-container-highest);
+    color: var(--on-surface);
+}
+
+.context-menu .menu-item.delete:hover {
+    background-color: rgba(255, 69, 58, 0.1);
+    color: #ff453a;
+}
+
+.context-menu .menu-separator {
+    height: 1px;
+    background-color: var(--outline-variant);
+    margin: 0.4rem 0;
+}
+
+.context-menu .menu-header {
+    font-size: 0.6rem;
+    font-weight: 800;
+    color: var(--outline);
+    padding: 0.25rem 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1rem;
+    opacity: 0.6;
+}
+
+.menu-scroll-area {
+    max-height: 250px;
+    overflow-y: auto;
+    margin-top: 0.25rem;
+}
+
+.menu-scroll-area::-webkit-scrollbar {
+    width: 3px;
+}
+
+.menu-scroll-area::-webkit-scrollbar-thumb {
+    background: var(--outline-variant);
+    border-radius: 10px;
+}
+
+.cat-parent {
+    font-size: 0.6rem;
+    margin-left: auto;
+    background: var(--surface-container-highest);
+    padding: 1px 4px;
+    border-radius: 4px;
+    opacity: 0.6;
+    text-transform: uppercase;
+    font-weight: 700;
 }

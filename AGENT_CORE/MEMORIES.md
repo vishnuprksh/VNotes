@@ -52,3 +52,17 @@
 - **Context:** User requested sub-sections in PARA and noted 'New Note' always defaults to Projects.
 - **Decision:** Implementing hierarchical category rendering in Sidebar and making 'New Note' dynamic based on active note.
 - **Reasoning:** Enhances organization capabilities and streamlines workflow by respecting the current context.
+
+### 2026-04-26 - Sidebar UX & Context Menus
+- **Context:** User requested sidebar scrolling, sub-section creation UI, and right-click context menus for notes.
+- **Decision:** Implementing custom context menu for sidebar notes and adding '+' icons for sub-section creation.
+- **Reasoning:** Moving beyond terminal-only controls to a more intuitive GUI-driven workflow while maintaining minimalist aesthetics.
+### 2026-04-26 - Advanced Sub-section Management Planning
+- **Context:** User requested better sidebar organization; current PARA system is derived but hard to manage.
+- **Decision:** Planning to add "Move to Sub-section" and sub-section lifecycle management (Rename/Delete).
+- **Reasoning:** Necessary for the PARA system to be fully functional and user-friendly beyond simple note creation.
+
+### 2026-04-26 - Advanced Sub-section Management Implementation
+- **Context:** User approved the plan to enhance PARA organization.
+- **Decision:** Implemented context-aware menus and cascading logic for renames/deletions.
+- **Reasoning:** Ensures data integrity while providing a powerful GUI-driven organizational tool. The system now feels like a mature PARA-based knowledge manager.
