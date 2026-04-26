@@ -12,8 +12,8 @@ const Editor = ({ editor }) => {
     <div className="editor-container">
       <article className="editor-content">
         <div className="note-meta">
-          <span className={`tag ${activeNote.category.toLowerCase()}`}>{activeNote.category}</span>
-          <span className="tag generic">{activeNote.tag}</span>
+          <span className={`tag ${(activeNote.category || 'Projects').toLowerCase()}`}>{activeNote.category || 'Projects'}</span>
+          <span className="tag generic">{activeNote.tag || 'Note'}</span>
         </div>
         <header className="note-header" style={{ marginBottom: '0.5rem' }}>
           <div className="note-subtitle">

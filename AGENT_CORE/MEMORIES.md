@@ -18,3 +18,8 @@
 - **Context:** User requested to use Firebase Firestore instead of LocalStorage for notes database.
 - **Decision:** Replaced `localStorage` persistence in `NotesContext.jsx` with Firestore `onSnapshot` for real-time syncing and `setDoc`/`deleteDoc`/`writeBatch` for mutations. Secured access using `firestore.rules`.
 - **Reasoning:** LocalStorage lacks cross-device sync and durability. Firestore offers a seamless real-time document database that integrates natively with the recently added Google Authentication, allowing robust multi-device synchronization per user.
+
+### 2026-04-26 - Auth & Data UI Stability
+- **Context:** Verifying Firebase integration in browser.
+- **Decision:** Added defensive fallbacks (`|| 'Projects'`) to note metadata access in `Editor.jsx`. Confirmed `Cross-Origin-Opener-Policy` warnings during Firebase Auth popup are non-blocking warnings in Vite local development and the auth lifecycle completes successfully.
+- **Reasoning:** Since Firebase Firestore relies on user data, edge cases where a newly created/synced note lacks optional fields (like `category`) can cause string method crashes (`toLowerCase()`). COOP warnings are acceptable during local dev as long as the popup resolves.

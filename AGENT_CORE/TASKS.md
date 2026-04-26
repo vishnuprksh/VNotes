@@ -23,5 +23,6 @@
 - [x] Initialize Firebase Firestore
 - [x] Implement `src/firebase.js` with `db`
 - [x] Refactor `NotesContext.jsx` to sync with Firestore
+- [x] Verify Firebase integration in browser (Auth and Editor load)
 
 **Blockers:** None
