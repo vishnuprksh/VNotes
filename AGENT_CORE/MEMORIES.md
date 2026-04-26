@@ -43,3 +43,8 @@
 - **Context:** Render build failed due to React 19 peer dependency conflicts with react-markdown-editor-lite.
 - **Decision:** Created .npmrc with legacy-peer-deps=true and updated render.yaml.
 - **Reasoning:** .npmrc ensures npm install succeeds even with peer dependency conflicts, which is necessary when using libraries that haven't updated for React 19 yet.
+
+### 2026-04-26 - UI Contrast Improvement
+- **Context:** User noted sidebar and main window are indistinguishable due to same color.
+- **Decision:** Using Stitch to redesign for better contrast and glassmorphism.
+- **Reasoning:** Improving visual hierarchy and user experience through clear separation of functional areas.
