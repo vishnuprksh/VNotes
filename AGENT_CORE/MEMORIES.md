@@ -23,3 +23,8 @@
 - **Context:** User requested deployment to Render and architecture changes.
 - **Decision:** Moving state management to React Context API and adding Render Blueprint configuration.
 - **Reasoning:** Context API simplifies global state access (notes/terminal) and prepares the app for future features. Render Blueprints ensure consistent deployments.
+
+### 2026-04-26 - Render Blueprint Fix
+- **Context:** Render failed to parse the blueprint due to incorrect field names.
+- **Decision:** Updated 'publishPath' to 'staticPublishPath' and added explicit SPA routing in render.yaml.
+- **Reasoning:** 'staticPublishPath' is the correct field for static sites in the Render Blueprint spec.
