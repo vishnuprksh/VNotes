@@ -74,14 +74,30 @@ export const NotesProvider = ({ children }) => {
   }, [currentUser]);
 
   const updateNote = useCallback((id, content) => {
+    // Extract title from content
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = content;
+    let title = 'Untitled Note';
+    
+    for (const child of tempDiv.children) {
+      const text = child.textContent.trim();
+      if (text) {
+        title = text.substring(0, 100);
+        break;
+      }
+    }
+    if (title === 'Untitled Note' && tempDiv.textContent.trim()) {
+      title = tempDiv.textContent.trim().substring(0, 100);
+    }
+
     setNotes(prev => ({
       ...prev,
-      [id]: { ...prev[id], content }
+      [id]: { ...prev[id], content, title }
     }));
     
     if (currentUser) {
       const docRef = doc(db, `users/${currentUser.uid}/notes`, id);
-      setDoc(docRef, { content }, { merge: true }).catch(console.error);
+      setDoc(docRef, { content, title }, { merge: true }).catch(console.error);
     }
   }, [currentUser]);
 
