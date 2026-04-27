@@ -55,6 +55,7 @@ const Terminal = () => {
     isAgentThinking,
   } = useNotesContext();
 
+  const [isMinimized, setIsMinimized] = React.useState(false);
   const bottomRef = useRef(null);
   const inputRef = useRef(null);
 
@@ -72,9 +73,14 @@ const Terminal = () => {
     }
   };
 
+  const toggleMinimize = (e) => {
+    e.stopPropagation();
+    setIsMinimized(!isMinimized);
+  };
+
   return (
-    <footer className="terminal-pane">
-      <div className="terminal-header">
+    <footer className={`terminal-pane ${isMinimized ? 'minimized' : ''}`}>
+      <div className="terminal-header" onClick={isMinimized ? toggleMinimize : undefined}>
         <div className="terminal-title">
           <i className="fas fa-terminal"></i>
           Agentic Terminal
@@ -85,16 +91,20 @@ const Terminal = () => {
             </span>
           )}
         </div>
-        <div className="top-bar-actions" style={{ fontSize: '0.6rem' }}>
-          <i className="fas fa-minus" title="Minimize Terminal"></i>
-          <i className="fas fa-expand-alt" title="Expand Terminal"></i>
-          <i className="fas fa-times" title="Close Terminal"></i>
+        <div className="top-bar-actions">
+          <i 
+            className={`fas ${isMinimized ? 'fa-chevron-up' : 'fa-minus'}`} 
+            onClick={toggleMinimize} 
+            title={isMinimized ? "Expand Terminal" : "Minimize Terminal"}
+          ></i>
+          {!isMinimized && (
+            <i className="fas fa-times" onClick={() => setTerminalInput('')} title="Clear Input"></i>
+          )}
         </div>
       </div>
 
       <div
         className="terminal-body"
-        style={{ overflowY: 'auto', height: 'calc(100% - 25px)' }}
         onClick={() => inputRef.current?.focus()}
       >
         {terminalLines.map((line, i) => (
@@ -111,7 +121,7 @@ const Terminal = () => {
             onChange={(e) => setTerminalInput(e.target.value)}
             onKeyDown={handleKeyDown}
             className="terminal-input"
-            placeholder={isAgentThinking ? 'Agent is thinking...' : 'Ask anything or type /help'}
+            placeholder={isAgentThinking ? 'Agent is thinking...' : 'Type help or /ask something...'}
             disabled={isAgentThinking}
             autoFocus
           />

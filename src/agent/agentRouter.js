@@ -16,6 +16,7 @@ export const ROUTE_AGENT = 'agent';
  */
 export function routeInput(input) {
   const trimmed = input.trim();
-  if (!trimmed) return ROUTE_COMMAND; // empty → falls through to "unknown command"
-  return trimmed.startsWith('/') ? ROUTE_COMMAND : ROUTE_AGENT;
+  if (!trimmed) return ROUTE_COMMAND; 
+  // '/' prefix means AI Agent, otherwise Command
+  return trimmed.startsWith('/') ? ROUTE_AGENT : ROUTE_COMMAND;
 }

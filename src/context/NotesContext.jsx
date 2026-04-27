@@ -26,9 +26,8 @@ export const NotesProvider = ({ children }) => {
   // Terminal state
   const [terminalLines, setTerminalLines] = useState([
     { type: 'system', text: 'VNotes Agent v2.0.0 ready.' },
-    { type: 'system', text: 'Persistence layer: Firebase Firestore active.' },
-    { type: 'system', text: 'Type /help for commands, or ask me anything naturally.' },
-    { type: 'system', text: 'Use /setkey <key> to set your OpenRouter API key.' },
+    { type: 'system', text: 'Type help for commands, or use / to ask me anything.' },
+    { type: 'system', text: 'Example: /what did I do on last sep 25th?' },
   ]);
   const [terminalInput, setTerminalInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
@@ -213,6 +212,9 @@ export const NotesProvider = ({ children }) => {
   // ─── Agent pipeline ────────────────────────────────────────────────────────
   const runAgentQuery = useCallback((query, currentNotes) => {
     // Append user query line
+    // If the query starts with '/', strip it for the agent
+    const cleanQuery = query.startsWith('/') ? query.substring(1).trim() : query;
+
     setTerminalLines(prev => [
       ...prev,
       { type: 'user', text: query },
@@ -231,7 +233,7 @@ export const NotesProvider = ({ children }) => {
     ]);
 
     runAgent({
-      query,
+      query: cleanQuery,
       notes: currentNotes,
       apiKey: apiKeyRef.current,
       onSearchResults: (results) => {
@@ -298,22 +300,22 @@ export const NotesProvider = ({ children }) => {
     ];
 
     switch (command) {
-      case '/help':
+      case 'help':
         newLines.push({ type: 'system', text: '── Commands ──────────────────────' });
-        newLines.push({ type: 'system', text: '  /create [category]  — Create a new note' });
-        newLines.push({ type: 'system', text: '  /delete             — Delete active note' });
-        newLines.push({ type: 'system', text: '  /move [category]    — Move active note' });
-        newLines.push({ type: 'system', text: '  /search [query]     — Filter sidebar' });
-        newLines.push({ type: 'system', text: '  /clear-search       — Reset search' });
-        newLines.push({ type: 'system', text: '  /list               — List all notes' });
-        newLines.push({ type: 'system', text: '  /setkey <key>       — Set OpenRouter API key' });
-        newLines.push({ type: 'system', text: '  /clear              — Clear terminal' });
+        newLines.push({ type: 'system', text: '  create [category]  — Create a new note' });
+        newLines.push({ type: 'system', text: '  delete             — Delete active note' });
+        newLines.push({ type: 'system', text: '  move [category]    — Move active note' });
+        newLines.push({ type: 'system', text: '  search [query]     — Filter sidebar' });
+        newLines.push({ type: 'system', text: '  clear-search       — Reset search' });
+        newLines.push({ type: 'system', text: '  list               — List all notes' });
+        newLines.push({ type: 'system', text: '  setkey <key>       — Set OpenRouter API key' });
+        newLines.push({ type: 'system', text: '  clear              — Clear terminal' });
         newLines.push({ type: 'system', text: '── AI Agent ──────────────────────' });
-        newLines.push({ type: 'system', text: '  Type anything without / to ask the AI about your notes.' });
-        newLines.push({ type: 'system', text: '  Example: "what did I work on last week?"' });
+        newLines.push({ type: 'system', text: '  Start with / to ask the AI about your notes.' });
+        newLines.push({ type: 'system', text: '  Example: "/what did I work on last week?"' });
         break;
 
-      case '/setkey': {
+      case 'setkey': {
         const key = args.slice(1).join(' ').trim();
         if (key) {
           apiKeyRef.current = key;
@@ -324,14 +326,14 @@ export const NotesProvider = ({ children }) => {
         break;
       }
 
-      case '/create': {
+      case 'create': {
         const cat = args[1] || 'Projects';
         createNote(cat);
         newLines.push({ type: 'system', text: `✓ Created new note in ${cat}` });
         break;
       }
 
-      case '/delete':
+      case 'delete':
         if (activeNoteId) {
           deleteNote(activeNoteId);
           newLines.push({ type: 'system', text: '✓ Deleted active note.' });
@@ -340,46 +342,46 @@ export const NotesProvider = ({ children }) => {
         }
         break;
 
-      case '/move': {
+      case 'move': {
         const newCat = args[1];
         if (activeNoteId && newCat) {
           moveNote(activeNoteId, newCat);
           newLines.push({ type: 'system', text: `✓ Moved note to ${newCat}` });
         } else {
-          newLines.push({ type: 'error', text: 'Usage: /move [Projects|Areas|Resources|Archives]' });
+          newLines.push({ type: 'error', text: 'Usage: move [Projects|Areas|Resources|Archives]' });
         }
         break;
       }
 
-      case '/list':
+      case 'list':
         newLines.push({ type: 'system', text: 'PARA Hierarchy:' });
         Object.values(notes).forEach(n => {
           newLines.push({ type: 'system', text: `  [${n.category}] ${n.title}` });
         });
         break;
 
-      case '/search': {
+      case 'search': {
         const query = args.slice(1).join(' ');
         if (query) {
           setSearchQuery(query);
           newLines.push({ type: 'system', text: `Searching sidebar for: "${query}"` });
         } else {
-          newLines.push({ type: 'error', text: 'Usage: /search [query]' });
+          newLines.push({ type: 'error', text: 'Usage: search [query]' });
         }
         break;
       }
 
-      case '/clear-search':
+      case 'clear-search':
         setSearchQuery('');
         newLines.push({ type: 'system', text: '✓ Search filter cleared.' });
         break;
 
-      case '/clear':
+      case 'clear':
         setTerminalLines([]);
         return;
 
       default:
-        newLines.push({ type: 'error', text: `Unknown command "${command}". Type /help.` });
+        newLines.push({ type: 'error', text: `Unknown command "${command}". Type help for help.` });
     }
 
     setTerminalLines(newLines);
