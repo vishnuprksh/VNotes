@@ -9,6 +9,7 @@ import Sidebar from './components/Sidebar';
 import TopBar from './components/TopBar';
 import Editor from './components/Editor';
 import Terminal from './components/Terminal';
+import Settings from './components/Settings';
 import { useNotesContext } from './context/NotesContext';
 import './index.css';
 
@@ -20,6 +21,7 @@ function App() {
   } = useNotesContext();
 
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   const editor = useEditor({
     extensions: [
@@ -57,7 +59,11 @@ function App() {
 
   return (
     <div className="app-container">
-      <Sidebar isOpen={isMobileSidebarOpen} setIsOpen={setIsMobileSidebarOpen} />
+      <Sidebar 
+        isOpen={isMobileSidebarOpen} 
+        setIsOpen={setIsMobileSidebarOpen} 
+        onOpenSettings={() => setIsSettingsOpen(true)}
+      />
       
       {isMobileSidebarOpen && (
         <div 
@@ -73,6 +79,8 @@ function App() {
 
         <Terminal />
       </main>
+
+      <Settings isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
     </div>
   );
 }
