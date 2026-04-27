@@ -1,7 +1,7 @@
 # Task Tracking
-- [x] **Current Focus:** Make UI responsive for mobile and desktop
-- [x] Generate mobile design reference via Stitch
-- [x] Implement responsive layout in App.jsx, Sidebar.jsx, TopBar.jsx
-- [x] Add media queries to index.css for sidebar toggle and layout adjustments
-- [x] UI Tweaks: Move search bar to sidebar
+- [ ] **Current Focus:** Implement Settings Page UI and state management
+- [ ] Create `Settings.jsx` component.
+- [ ] Add Settings modal/view state to `App.jsx`.
+- [ ] Implement local storage state management for AI settings (API keys, models, system prompt).
+- [ ] Style Settings page to match "Deep Focus" design system.
 **Blockers:** None
