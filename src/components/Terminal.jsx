@@ -59,15 +59,54 @@ const Terminal = () => {
   const bottomRef = useRef(null);
   const inputRef = useRef(null);
 
+  // Command history — stored in a ref to avoid re-renders
+  const historyRef = useRef([]);     // oldest → newest
+  const historyIdxRef = useRef(-1);  // -1 = no navigation active
+  const draftRef = useRef('');       // preserves in-progress text when navigating
+
   // Auto-scroll to bottom whenever lines update
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [terminalLines]);
 
   const handleKeyDown = (e) => {
+    const history = historyRef.current;
+
+    if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (history.length === 0) return;
+      // Save draft on first upward move
+      if (historyIdxRef.current === -1) {
+        draftRef.current = terminalInput;
+      }
+      const nextIdx = Math.min(historyIdxRef.current + 1, history.length - 1);
+      historyIdxRef.current = nextIdx;
+      setTerminalInput(history[history.length - 1 - nextIdx]);
+      return;
+    }
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      if (historyIdxRef.current === -1) return;
+      const nextIdx = historyIdxRef.current - 1;
+      historyIdxRef.current = nextIdx;
+      if (nextIdx === -1) {
+        setTerminalInput(draftRef.current);
+      } else {
+        setTerminalInput(history[history.length - 1 - nextIdx]);
+      }
+      return;
+    }
+
     if (e.key === 'Enter' && !isAgentThinking) {
       const val = terminalInput.trim();
       if (!val) return;
+      // Push to history (avoid consecutive duplicates)
+      if (history[history.length - 1] !== val) {
+        historyRef.current = [...history, val];
+      }
+      historyIdxRef.current = -1;
+      draftRef.current = '';
       executeCommand(val);
       setTerminalInput('');
     }
