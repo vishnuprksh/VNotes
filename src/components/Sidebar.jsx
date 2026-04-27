@@ -15,7 +15,8 @@ const Sidebar = () => {
     moveNote, 
     renameSubSection, 
     deleteSubSection, 
-    searchQuery 
+    searchQuery,
+    setSearchQuery
   } = useNotesContext();
   
   const [contextMenu, setContextMenu] = useState({ 
@@ -216,10 +217,16 @@ const Sidebar = () => {
         </div>
       </div>
       
-      <button className="new-note-btn" onClick={() => createNote()}>
-        <i className="fas fa-plus"></i>
-        New Note
-      </button>
+      <div className="search-bar" style={{ marginBottom: '2rem', width: '100%' }}>
+        <i className="fas fa-search"></i>
+        <input 
+          type="text" 
+          placeholder="Search..." 
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+        <span style={{ fontSize: '0.6rem', color: 'var(--outline)' }}>⌘K</span>
+      </div>
 
       <nav className="nav-group">
         <div className="nav-header">BRAIN</div>
@@ -341,7 +348,6 @@ const Sidebar = () => {
       </nav>
 
       <div className="sidebar-footer">
-        <div className="sidebar-item"><i className="fas fa-search"></i> Search</div>
         <div className="sidebar-item"><i className="fas fa-cog"></i> Settings</div>
         {currentUser ? (
           <div className="sidebar-item user-profile" onClick={signOut}>
