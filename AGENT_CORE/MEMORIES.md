@@ -1,35 +1,5 @@
 # Strategic Memories
-### 2026-04-26 - Search Strategy
-- **Context:** User wants robust search in the sidebar and terminal.
-- **Decision:** Search will filter both note titles and content. Sections will be filtered based on whether they contain matching notes.
-- **Reasoning:** To prevent the sidebar from becoming cluttered during search, we only show sections that have relevant hits. Force-expanding these sections ensures the results are visible without extra clicks.
-
-### 2026-04-26 - Terminal Commands
-- **Context:** Need power-user features.
-- **Decision:** Added `/search` and `/clear` commands.
-- **Reasoning:** Terminal is a core part of the "VNotes" identity; basic UI actions should be scriptable/executable via terminal.
-
-### 2026-04-26 - AI Agent Architecture
-- **Context:** User wants natural language queries answered from their notes in the terminal.
-- **Decision:** Client-side TF-IDF vector search + OpenRouter streaming (`z-ai/glm-4.5-air:free`). No new npm packages. Agent has read-only access (frozen notes snapshot). API key stored in `apiKeyRef` in-memory, set via `/setkey` terminal command.
-- **Reasoning:** Keeps the app pure-frontend. TF-IDF is fast, free, and sufficient for personal notes. Streaming gives a live terminal feel. Read-only by design — agent cannot write.
-- **Terminal line format changed:** Lines are now typed objects `{ type, text, id?, streaming? }` not plain strings. This allows per-type rendering (agent vs user vs error vs system).
-### 2026-04-26 - Firestore Migration
-- **Context:** User requested to use Firebase Firestore instead of LocalStorage for notes database.
-- **Decision:** Replaced `localStorage` persistence in `NotesContext.jsx` with Firestore `onSnapshot` for real-time syncing and `setDoc`/`deleteDoc`/`writeBatch` for mutations. Secured access using `firestore.rules`.
-- **Reasoning:** LocalStorage lacks cross-device sync and durability. Firestore offers a seamless real-time document database that integrates natively with the recently added Google Authentication, allowing robust multi-device synchronization per user.
-
-### 2026-04-26 - Auth & Data UI Stability
-- **Context:** Verifying Firebase integration in browser.
-- **Decision:** Added defensive fallbacks (`|| 'Projects'`) to note metadata access in `Editor.jsx`. Confirmed `Cross-Origin-Opener-Policy` warnings during Firebase Auth popup are non-blocking warnings in Vite local development and the auth lifecycle completes successfully.
-- **Reasoning:** Since Firebase Firestore relies on user data, edge cases where a newly created/synced note lacks optional fields (like `category`) can cause string method crashes (`toLowerCase()`). COOP warnings are acceptable during local dev as long as the popup resolves.
-
-### 2026-04-26 - Server Maintenance
-- **Context:** User requested to kill all ports and restart localhost.
-- **Decision:** Killed processes on ports 5173-5176 and restarted Vite.
-- **Reasoning:** Cleaning up stale development processes ensures a fresh state and consistent port mapping (reverted to default 5173).
-
-### 2026-04-26 - Context Menu & State Stability Fix
-- **Context:** Right-clicking on notes/sub-sections caused an app crash (blank screen) and premature `window.confirm` dialogs.
-- **Decision:** Gracefully handle `undefined` categories in `allCategories` sorting to prevent `localeCompare` crashes. Refactor `NotesContext.jsx` to avoid direct state mutations. Rewrote `Sidebar.jsx` navigation to fix a corruption where nested maps were incorrectly interleaved.
-- **Reasoning:** The corruption was likely the primary cause of the "blank screen" crash and broken interactions. Restoring a clean, hierarchical rendering logic ensures the context menu targets the correct IDs and paths.
+### 2026-04-27 - Note Deletion Bug Analysis
+- **Context:** User reported inability to delete notes.
+- **Decision:** Identified that while backend deletion works, the Editor UI fails to clear when the active note is removed, leading to a "ghost" note appearance.
+- **Reasoning:** Tiptap editor content synchronization in `App.jsx` was missing a fallback for `null` active note state.

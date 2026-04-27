@@ -109,16 +109,21 @@ export const NotesProvider = ({ children }) => {
   }, [activeNoteId, notes, currentUser]);
 
   const deleteNote = useCallback((id) => {
+    // Clear active note if it's the one being deleted
+    setActiveNoteId(prev => (prev === id ? null : prev));
+
     setNotes(prev => {
       const next = { ...prev };
       delete next[id];
       return next;
     });
-    setActiveNoteId(prev => (prev === id ? null : prev)); // The effect will auto-select the next note
     
     if (currentUser) {
       const docRef = doc(db, `users/${currentUser.uid}/notes`, id);
-      deleteDoc(docRef).catch(console.error);
+      deleteDoc(docRef).catch(err => {
+        console.error("Error deleting note from Firestore:", err);
+        // Optional: Re-fetch notes on error to restore local state
+      });
     }
   }, [currentUser]);
 

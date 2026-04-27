@@ -123,16 +123,15 @@ const Sidebar = () => {
   };
 
   const handleDelete = () => {
+    console.log('handleDelete called', contextMenu);
     if (contextMenu.type === 'note' && contextMenu.noteId) {
-      if (window.confirm('Delete this note?')) {
-        deleteNote(contextMenu.noteId);
-      }
+      console.log('Deleting note:', contextMenu.noteId);
+      deleteNote(contextMenu.noteId);
     } else if (contextMenu.type === 'subsection') {
       if (window.confirm(`Delete section "${contextMenu.target}" and move all notes to parent?`)) {
         deleteSubSection(contextMenu.target);
       }
     } else if (contextMenu.type === 'section') {
-      // For top level sections, maybe just prevent deletion or handle differently
       alert('Cannot delete top-level PARA categories.');
     }
     handleCloseContextMenu();

@@ -1,9 +1,14 @@
 # Project Overview: VNotes
-**North Star:** A high-performance, PARA-organized note-taking app with a terminal-first power-user workflow, enhanced by an in-terminal AI agent.
-**Core Architecture:** React (Vite), Tiptap Editor, Framer Motion, Context API for state management. AI agent layer: `src/agent/` (agentRouter, agentCore, vectorSearch, openRouterClient).
+**North Star:** A high-performance, PARA-based note-taking application with an integrated AI agent terminal and fluid design.
+**Core Architecture:** 
+- Frontend: React (Vite)
+- Editor: Tiptap
+- Persistence: Firebase Firestore
+- Design: Vanilla CSS (Glassmorphism, PARA hierarchy)
 **Guiding Principles:** 
-- Premium Aesthetics (Glassmorphism, Dark Mode).
-- Zero-click interaction patterns (Inline renaming, automatic focus).
-- PARA Structure (Projects, Areas, Resources, Archives).
-- AI agent has read-only access to notes (frozen snapshot).
-**Constraints:** Desktop-first, local storage persistence. OpenRouter API key stored in-memory (not persisted). Agent model: `z-ai/glm-4.5-air:free`.
+- Fluid, responsive UI
+- PARA organizational structure
+- AI-first interaction via terminal
+**Constraints:** 
+- Vanilla CSS only (no Tailwind unless requested)
+- Firebase for auth and storage

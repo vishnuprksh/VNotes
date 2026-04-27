@@ -40,10 +40,15 @@ function App() {
 
   // Sync editor when active note changes
   useEffect(() => {
-    if (editor && activeNoteId && notes[activeNoteId]) {
-      const currentContent = editor.getHTML();
-      if (currentContent !== notes[activeNoteId].content) {
-        editor.commands.setContent(notes[activeNoteId].content);
+    if (editor) {
+      if (activeNoteId && notes[activeNoteId]) {
+        const currentContent = editor.getHTML();
+        if (currentContent !== notes[activeNoteId].content) {
+          editor.commands.setContent(notes[activeNoteId].content);
+        }
+      } else {
+        // Clear editor if no note is active or found
+        editor.commands.setContent('');
       }
     }
   }, [activeNoteId, editor, notes]);
