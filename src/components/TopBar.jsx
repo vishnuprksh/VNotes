@@ -1,8 +1,11 @@
 import React from 'react';
 
-const TopBar = () => {
+const TopBar = ({ toggleSidebar }) => {
   return (
     <header className="top-bar">
+      <div className="mobile-menu-btn" onClick={toggleSidebar}>
+        <i className="fas fa-bars"></i>
+      </div>
       <div className="menu-items">
         <div className="menu-item">File</div>
         <div className="menu-item">Edit</div>

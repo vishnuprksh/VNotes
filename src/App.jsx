@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
@@ -18,6 +18,8 @@ function App() {
     activeNoteId, 
     updateNote,
   } = useNotesContext();
+
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   const editor = useEditor({
     extensions: [
@@ -55,10 +57,17 @@ function App() {
 
   return (
     <div className="app-container">
-      <Sidebar />
+      <Sidebar isOpen={isMobileSidebarOpen} setIsOpen={setIsMobileSidebarOpen} />
+      
+      {isMobileSidebarOpen && (
+        <div 
+          className="mobile-backdrop" 
+          onClick={() => setIsMobileSidebarOpen(false)}
+        />
+      )}
       
       <main className="main-content">
-        <TopBar />
+        <TopBar toggleSidebar={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)} />
         
         <Editor editor={editor} />
 

@@ -4,7 +4,7 @@ import { useNotesContext } from '../context/NotesContext';
 import { useAuth } from '../context/AuthContext';
 import ContextMenu from './ContextMenu';
 
-const Sidebar = () => {
+const Sidebar = ({ isOpen, setIsOpen }) => {
   const { currentUser, signInWithGoogle, signOut } = useAuth();
   const { 
     notes, 
@@ -208,13 +208,16 @@ const Sidebar = () => {
   };
 
   return (
-    <aside className="sidebar">
+    <aside className={`sidebar ${isOpen ? 'mobile-open' : ''}`}>
       <div className="brand">
         <div className="logo">VN</div>
         <div className="brand-text">
           <h2>VNotes</h2>
           <span>DEEP FOCUS</span>
         </div>
+        <button className="mobile-close-btn" onClick={() => setIsOpen(false)}>
+          <i className="fas fa-times"></i>
+        </button>
       </div>
       
       <div className="search-bar" style={{ marginBottom: '2rem', width: '100%' }}>
