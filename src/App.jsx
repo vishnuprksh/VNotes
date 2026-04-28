@@ -18,6 +18,7 @@ function App() {
     notes, 
     activeNoteId, 
     updateNote,
+    pendingNoteChange,
   } = useNotesContext();
 
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
@@ -43,19 +44,21 @@ function App() {
   });
 
   // Sync editor when active note changes
+  // Don't overwrite editor when a pending change is being reviewed in diff tab
   useEffect(() => {
     if (editor) {
       if (activeNoteId && notes[activeNoteId]) {
         const currentContent = editor.getHTML();
-        if (currentContent !== notes[activeNoteId].content) {
-          editor.commands.setContent(notes[activeNoteId].content);
+        const noteContent = notes[activeNoteId].content;
+        // Skip sync if a pending change is being reviewed — avoid stomping on proposed content display
+        if (currentContent !== noteContent && !pendingNoteChange) {
+          editor.commands.setContent(noteContent);
         }
       } else {
-        // Clear editor if no note is active or found
         editor.commands.setContent('');
       }
     }
-  }, [activeNoteId, editor, notes]);
+  }, [activeNoteId, editor, notes, pendingNoteChange]);
 
   return (
     <div className="app-container">

@@ -34,11 +34,18 @@ export const NotesProvider = ({ children }) => {
   const [terminalLines, setTerminalLines] = useState([
     { type: 'system', text: 'VNotes Agent v2.0.0 ready.' },
     { type: 'system', text: 'Type help for commands, or use / to ask me anything.' },
-    { type: 'system', text: 'Example: /what did I do on last sep 25th?' },
+    { type: 'system', text: 'Example: /proofread my note' },
   ]);
   const [terminalInput, setTerminalInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [isAgentThinking, setIsAgentThinking] = useState(false);
+
+  // Pending note change from agent (for diff view)
+  // { noteId, originalContent, proposedContent }
+  const [pendingNoteChange, setPendingNoteChange] = useState(null);
+
+  // Active editor tab
+  const [activeTab, setActiveTab] = useState('preview');
 
   // ─── User settings (AI config) ───────────────────────────────────────────
   const [userSettings, setUserSettings] = useState(DEFAULT_SETTINGS);
@@ -245,7 +252,7 @@ export const NotesProvider = ({ children }) => {
   }, [currentUser]);
 
   // ─── Agent pipeline ────────────────────────────────────────────────────────
-  const runAgentQuery = useCallback((query, currentNotes) => {
+  const runAgentQuery = useCallback((query, currentNotes, currentActiveNoteId) => {
     // Append user query line
     // If the query starts with '/', strip it for the agent
     const cleanQuery = query.startsWith('/') ? query.substring(1).trim() : query;
@@ -267,12 +274,30 @@ export const NotesProvider = ({ children }) => {
       { type: 'agent', text: '', id: agentLineId, streaming: true },
     ]);
 
+    // Get the active note at query time (stable reference via closure arg)
+    const activeNote = currentNotes[currentActiveNoteId] || null;
+
     runAgent({
       query: cleanQuery,
       notes: currentNotes,
+      activeNote,
       apiKey: userSettings.openRouterKey || import.meta.env.VITE_OPENROUTER_API_KEY || '',
       model: userSettings.defaultModel,
       systemPromptOverride: userSettings.systemPrompt || undefined,
+      onNoteModification: (proposedHtml) => {
+        if (activeNote) {
+          setPendingNoteChange({
+            noteId: activeNote.id,
+            originalContent: activeNote.content,
+            proposedContent: proposedHtml,
+          });
+          setActiveTab('diff');
+          setTerminalLines(prev => [
+            ...prev,
+            { type: 'system', text: '↳ Note modification ready — check the Diff tab to review changes.' },
+          ]);
+        }
+      },
       onSearchResults: (results) => {
         if (results.length > 0) {
           const titles = results.map(r => `"${r.note.title}"`).join(', ');
@@ -295,7 +320,7 @@ export const NotesProvider = ({ children }) => {
           return next;
         });
       },
-      onDone: () => {
+      onDone: (_fullText) => {
         // Mark streaming complete
         setTerminalLines(prev => {
           const next = [...prev];
@@ -315,7 +340,7 @@ export const NotesProvider = ({ children }) => {
         setIsAgentThinking(false);
       },
     });
-  }, [userSettings]);
+  }, [userSettings, activeNoteId]);
 
   // ─── Command executor ───────────────────────────────────────────────────────
   const executeCommand = useCallback((input) => {
@@ -324,7 +349,7 @@ export const NotesProvider = ({ children }) => {
 
     // Route to agent or command handler
     if (routeInput(trimmed) === ROUTE_AGENT) {
-      runAgentQuery(trimmed, notes);
+      runAgentQuery(trimmed, notes, activeNoteId);
       return;
     }
 
@@ -424,6 +449,28 @@ export const NotesProvider = ({ children }) => {
     setTerminalLines(newLines);
   }, [terminalLines, notes, activeNoteId, createNote, deleteNote, moveNote, runAgentQuery]);
 
+  // Apply agent's proposed note change
+  const applyNoteChange = useCallback(() => {
+    if (!pendingNoteChange) return;
+    updateNote(pendingNoteChange.noteId, pendingNoteChange.proposedContent);
+    setPendingNoteChange(null);
+    setActiveTab('preview');
+    setTerminalLines(prev => [
+      ...prev,
+      { type: 'system', text: '✓ Note updated with agent changes.' },
+    ]);
+  }, [pendingNoteChange, updateNote]);
+
+  // Reject agent's proposed note change
+  const rejectNoteChange = useCallback(() => {
+    setPendingNoteChange(null);
+    setActiveTab('preview');
+    setTerminalLines(prev => [
+      ...prev,
+      { type: 'system', text: '✗ Agent changes discarded.' },
+    ]);
+  }, []);
+
   const value = {
     notes,
     activeNoteId,
@@ -443,6 +490,11 @@ export const NotesProvider = ({ children }) => {
     renameSubSection,
     deleteSubSection,
     executeCommand,
+    pendingNoteChange,
+    applyNoteChange,
+    rejectNoteChange,
+    activeTab,
+    setActiveTab,
   };
 
   return <NotesContext.Provider value={value}>{children}</NotesContext.Provider>;

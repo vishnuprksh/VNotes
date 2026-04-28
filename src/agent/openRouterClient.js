@@ -15,7 +15,7 @@ const DEFAULT_MODEL = 'z-ai/glm-4.5-air:free';
  * @param {Function} onDone - called when stream is complete
  * @param {Function} onError - called with error message string on failure
  */
-export async function streamChat({ apiKey, model, messages, onToken, onDone, onError }) {
+export async function streamChat({ apiKey, model, messages, maxTokens, onToken, onDone, onError }) {
   if (!apiKey) {
     onError('No API key set. Go to Settings → API Keys to add your OpenRouter key.');
     return;
@@ -34,7 +34,7 @@ export async function streamChat({ apiKey, model, messages, onToken, onDone, onE
         model: model || DEFAULT_MODEL,
         messages,
         stream: true,
-        max_tokens: 512,
+        max_tokens: maxTokens || 512,
         temperature: 0.7,
       }),
     });
