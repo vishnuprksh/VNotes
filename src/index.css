@@ -1104,6 +1104,66 @@ ul[data-type="taskList"] input[type="checkbox"] {
     opacity: 0.5;
 }
 
+/* Settings input row (key field + eye button) */
+.settings-input-row {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.settings-input-row .settings-input {
+    flex: 1;
+}
+
+.settings-eye-btn {
+    background: var(--surface-container-high);
+    border: 1px solid var(--outline-variant);
+    color: var(--on-surface-variant);
+    border-radius: var(--radius-md);
+    padding: 0 0.75rem;
+    height: 38px;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+    flex-shrink: 0;
+}
+
+.settings-eye-btn:hover {
+    background: var(--surface-container-highest);
+    color: var(--on-surface);
+}
+
+/* Key configured status badge */
+.settings-key-status {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #4ade80;
+    font-size: 0.8rem;
+    margin-top: 0.75rem;
+    padding: 0.5rem 0.75rem;
+    background: rgba(74, 222, 128, 0.08);
+    border: 1px solid rgba(74, 222, 128, 0.25);
+    border-radius: var(--radius-md);
+}
+
+/* Save success state */
+.settings-btn.primary.saved {
+    background: #4ade80;
+    color: #000;
+    transform: none;
+    pointer-events: none;
+}
+
+.settings-hint a {
+    color: var(--primary);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.settings-hint a:hover {
+    opacity: 0.8;
+}
+
 /* ── Mobile Responsive Overrides ─────────────────────── */
 @media (max-width: 768px) {
     .app-container {

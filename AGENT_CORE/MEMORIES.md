@@ -1,4 +1,11 @@
 # Strategic Memories
+### 2026-04-27 - Firestore Settings Sync & Hook Dependencies
+- **Context:** Settings (API keys, models) were not persisting across sessions and the terminal agent was failing to use updated keys.
+- **Decision:** Migrated settings from `localStorage` to Firestore `users/{uid}/settings/ai`.
+- **Reasoning:** LocalStorage is fragile and not cross-device. Firestore provides a central source of truth.
+- **Insight:** Found a critical bug where `runAgentQuery` (useCallback) had an empty dependency array, causing it to stale-capture initial empty settings. Added `userSettings` to dependencies to ensure real-time updates.
+- **Constraint:** Firestore security rules must explicitly include the `settings` path; default rules were too restrictive.
+
 ### 2026-04-27 - Note Deletion Bug Analysis
 - **Context:** User reported inability to delete notes.
 - **Decision:** Identified that while backend deletion works, the Editor UI fails to clear when the active note is removed, leading to a "ghost" note appearance.

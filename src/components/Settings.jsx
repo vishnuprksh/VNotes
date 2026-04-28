@@ -1,63 +1,95 @@
 import React, { useState, useEffect } from 'react';
+import { useNotesContext } from '../context/NotesContext';
+
+const MODELS = [
+  { id: 'z-ai/glm-4.5-air:free',            label: 'GLM 4.5 Air — Free (OpenRouter)' },
+  { id: 'openai/gpt-4o',                     label: 'GPT-4o (OpenAI)' },
+  { id: 'openai/gpt-4o-mini',                label: 'GPT-4o Mini (OpenAI)' },
+  { id: 'anthropic/claude-3.5-sonnet',       label: 'Claude 3.5 Sonnet (Anthropic)' },
+  { id: 'anthropic/claude-3-haiku',          label: 'Claude 3 Haiku (Anthropic)' },
+  { id: 'google/gemini-pro-1.5',             label: 'Gemini 1.5 Pro (Google)' },
+  { id: 'google/gemini-flash-1.5',           label: 'Gemini 1.5 Flash (Google)' },
+  { id: 'meta-llama/llama-3.1-8b-instruct:free', label: 'Llama 3.1 8B — Free (Meta)' },
+];
 
 const Settings = ({ isOpen, onClose }) => {
+  const { userSettings, updateSettings } = useNotesContext();
+
   const [activeTab, setActiveTab] = useState('ai');
-  const [config, setConfig] = useState({
-    openRouterKey: '',
-    openAIKey: '',
-    defaultModel: 'z-ai/glm-4.5-air:free',
-    systemPrompt: 'You are a helpful assistant integrated into a terminal of a note-taking app.',
-    streamResponses: true,
-  });
+  // Local draft state — only commits on Save
+  const [draft, setDraft] = useState(userSettings);
+  const [saved, setSaved] = useState(false);
+  const [showKey, setShowKey] = useState(false);
 
+  // Sync draft when settings load from Firestore
   useEffect(() => {
-    const savedConfig = localStorage.getItem('vnotes-ai-config');
-    if (savedConfig) {
-      try {
-        setConfig(prev => ({ ...prev, ...JSON.parse(savedConfig) }));
-      } catch (e) {
-        console.error("Failed to parse config", e);
-      }
-    }
-  }, []);
-
-  const handleSave = () => {
-    localStorage.setItem('vnotes-ai-config', JSON.stringify(config));
-    onClose();
-  };
+    setDraft(userSettings);
+  }, [userSettings]);
 
   const handleChange = (key, value) => {
-    setConfig(prev => ({ ...prev, [key]: value }));
+    setDraft(prev => ({ ...prev, [key]: value }));
+  };
+
+  const handleSave = () => {
+    updateSettings(draft);
+    setSaved(true);
+    setTimeout(() => {
+      setSaved(false);
+      onClose();
+    }, 800);
+  };
+
+  const handleCancel = () => {
+    setDraft(userSettings); // discard draft
+    onClose();
   };
 
   if (!isOpen) return null;
 
   return (
-    <div className="settings-overlay" onClick={onClose}>
+    <div className="settings-overlay" onClick={handleCancel}>
       <div className="settings-modal" onClick={e => e.stopPropagation()}>
+
+        {/* ── Sidebar nav ── */}
         <div className="settings-sidebar">
           <div className="settings-header">
             <h3>Settings</h3>
           </div>
           <div className="settings-nav">
-            <button className={`settings-tab ${activeTab === 'general' ? 'active' : ''}`} onClick={() => setActiveTab('general')}>
+            <button
+              className={`settings-tab ${activeTab === 'general' ? 'active' : ''}`}
+              onClick={() => setActiveTab('general')}
+            >
               <i className="fas fa-cog"></i> General
             </button>
-            <button className={`settings-tab ${activeTab === 'ai' ? 'active' : ''}`} onClick={() => setActiveTab('ai')}>
-              <i className="fas fa-robot"></i> AI & Models
+            <button
+              className={`settings-tab ${activeTab === 'ai' ? 'active' : ''}`}
+              onClick={() => setActiveTab('ai')}
+            >
+              <i className="fas fa-robot"></i> AI &amp; Models
             </button>
-            <button className={`settings-tab ${activeTab === 'apikeys' ? 'active' : ''}`} onClick={() => setActiveTab('apikeys')}>
+            <button
+              className={`settings-tab ${activeTab === 'apikeys' ? 'active' : ''}`}
+              onClick={() => setActiveTab('apikeys')}
+            >
               <i className="fas fa-key"></i> API Keys
             </button>
-            <button className={`settings-tab ${activeTab === 'appearance' ? 'active' : ''}`} onClick={() => setActiveTab('appearance')}>
+            <button
+              className={`settings-tab ${activeTab === 'appearance' ? 'active' : ''}`}
+              onClick={() => setActiveTab('appearance')}
+            >
               <i className="fas fa-paint-brush"></i> Appearance
             </button>
           </div>
         </div>
-        
+
+        {/* ── Content ── */}
         <div className="settings-content">
-          <button className="settings-close" onClick={onClose}><i className="fas fa-times"></i></button>
-          
+          <button className="settings-close" onClick={handleCancel}>
+            <i className="fas fa-times"></i>
+          </button>
+
+          {/* General */}
           {activeTab === 'general' && (
             <div className="settings-pane">
               <h2>General Settings</h2>
@@ -69,79 +101,104 @@ const Settings = ({ isOpen, onClose }) => {
             </div>
           )}
 
+          {/* AI & Models */}
           {activeTab === 'ai' && (
             <div className="settings-pane">
-              <h2>AI & Models</h2>
-              <p className="settings-desc">Configure agent behavior and default models.</p>
-              
+              <h2>AI &amp; Models</h2>
+              <p className="settings-desc">Configure the agent's model and behavior.</p>
+
               <div className="settings-field">
                 <label>Default Model</label>
-                <select 
-                  value={config.defaultModel} 
-                  onChange={(e) => handleChange('defaultModel', e.target.value)}
+                <select
+                  value={draft.defaultModel}
+                  onChange={e => handleChange('defaultModel', e.target.value)}
                   className="settings-input"
                 >
-                  <option value="openai/gpt-4o">GPT-4o (OpenAI)</option>
-                  <option value="anthropic/claude-3.5-sonnet">Claude 3.5 Sonnet (Anthropic)</option>
-                  <option value="google/gemini-pro-1.5">Gemini 1.5 Pro (Google)</option>
-                  <option value="z-ai/glm-4.5-air:free">GLM 4.5 Air (OpenRouter Free)</option>
+                  {MODELS.map(m => (
+                    <option key={m.id} value={m.id}>{m.label}</option>
+                  ))}
                 </select>
+                <span className="settings-hint">
+                  All models are accessed via your OpenRouter key (API Keys tab).
+                </span>
               </div>
 
               <div className="settings-field">
                 <label>System Prompt</label>
-                <textarea 
-                  value={config.systemPrompt} 
-                  onChange={(e) => handleChange('systemPrompt', e.target.value)}
+                <textarea
+                  value={draft.systemPrompt}
+                  onChange={e => handleChange('systemPrompt', e.target.value)}
                   className="settings-input textarea"
-                  rows="4"
+                  rows="5"
+                  placeholder="Instructions that guide the AI's persona and behavior…"
                 />
-                <span className="settings-hint">Instructions that guide the AI's behavior and persona.</span>
+                <span className="settings-hint">
+                  The note context is always appended automatically — this prepends your persona.
+                </span>
               </div>
 
               <div className="settings-field checkbox">
                 <label className="checkbox-label">
-                  <input 
-                    type="checkbox" 
-                    checked={config.streamResponses} 
-                    onChange={(e) => handleChange('streamResponses', e.target.checked)}
+                  <input
+                    type="checkbox"
+                    checked={draft.streamResponses}
+                    onChange={e => handleChange('streamResponses', e.target.checked)}
                   />
                   <span>Stream Responses</span>
                 </label>
-                <span className="settings-hint">Show AI response incrementally as it's generated.</span>
+                <span className="settings-hint">Show the AI response incrementally as it's generated.</span>
               </div>
             </div>
           )}
 
+          {/* API Keys */}
           {activeTab === 'apikeys' && (
             <div className="settings-pane">
               <h2>API Keys</h2>
-              <p className="settings-desc">Your keys are stored locally in your browser and never sent to our servers.</p>
-              
-              <div className="settings-field">
-                <label>OpenRouter API Key</label>
-                <input 
-                  type="password" 
-                  value={config.openRouterKey} 
-                  onChange={(e) => handleChange('openRouterKey', e.target.value)}
-                  className="settings-input"
-                  placeholder="sk-or-v1-..."
-                />
-              </div>
+              <p className="settings-desc">
+                Keys are stored in your Firebase account — synced across devices.
+              </p>
 
               <div className="settings-field">
-                <label>OpenAI API Key</label>
-                <input 
-                  type="password" 
-                  value={config.openAIKey} 
-                  onChange={(e) => handleChange('openAIKey', e.target.value)}
-                  className="settings-input"
-                  placeholder="sk-..."
-                />
+                <label>OpenRouter API Key</label>
+                <div className="settings-input-row">
+                  <input
+                    type={showKey ? 'text' : 'password'}
+                    value={draft.openRouterKey}
+                    onChange={e => handleChange('openRouterKey', e.target.value)}
+                    className="settings-input"
+                    placeholder="sk-or-v1-…"
+                    autoComplete="off"
+                    spellCheck={false}
+                  />
+                  <button
+                    className="settings-eye-btn"
+                    onClick={() => setShowKey(v => !v)}
+                    title={showKey ? 'Hide key' : 'Show key'}
+                    type="button"
+                  >
+                    <i className={`fas ${showKey ? 'fa-eye-slash' : 'fa-eye'}`}></i>
+                  </button>
+                </div>
+                <span className="settings-hint">
+                  Get a free key at{' '}
+                  <a href="https://openrouter.ai/keys" target="_blank" rel="noreferrer">
+                    openrouter.ai/keys
+                  </a>.
+                  Required to use the AI terminal agent.
+                </span>
               </div>
+
+              {draft.openRouterKey && (
+                <div className="settings-key-status">
+                  <i className="fas fa-check-circle"></i>
+                  Key configured — will be used for all AI queries.
+                </div>
+              )}
             </div>
           )}
 
+          {/* Appearance */}
           {activeTab === 'appearance' && (
             <div className="settings-pane">
               <h2>Appearance</h2>
@@ -154,8 +211,13 @@ const Settings = ({ isOpen, onClose }) => {
           )}
 
           <div className="settings-footer">
-            <button className="settings-btn secondary" onClick={onClose}>Cancel</button>
-            <button className="settings-btn primary" onClick={handleSave}>Save Changes</button>
+            <button className="settings-btn secondary" onClick={handleCancel}>Cancel</button>
+            <button
+              className={`settings-btn primary ${saved ? 'saved' : ''}`}
+              onClick={handleSave}
+            >
+              {saved ? <><i className="fas fa-check"></i> Saved!</> : 'Save Changes'}
+            </button>
           </div>
         </div>
       </div>

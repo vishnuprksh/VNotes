@@ -1,10 +1,17 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
-import { collection, doc, setDoc, deleteDoc, updateDoc, onSnapshot, writeBatch } from 'firebase/firestore';
+import { collection, doc, setDoc, deleteDoc, onSnapshot, writeBatch, getDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from './AuthContext';
 import { INITIAL_NOTES } from '../utils/para';
 import { routeInput, ROUTE_AGENT } from '../agent/agentRouter';
 import { runAgent } from '../agent/agentCore';
+
+const DEFAULT_SETTINGS = {
+  openRouterKey: '',
+  defaultModel: 'z-ai/glm-4.5-air:free',
+  systemPrompt: 'You are a helpful assistant integrated into a terminal of a note-taking app.',
+  streamResponses: true,
+};
 
 const NotesContext = createContext();
 
@@ -33,10 +40,38 @@ export const NotesProvider = ({ children }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isAgentThinking, setIsAgentThinking] = useState(false);
 
-  // API key stored in memory (not persisted for security)
-  const apiKeyRef = useRef(
-    import.meta.env.VITE_OPENROUTER_API_KEY || ''
-  );
+  // ─── User settings (AI config) ───────────────────────────────────────────
+  const [userSettings, setUserSettings] = useState(DEFAULT_SETTINGS);
+  const settingsLoadedRef = useRef(false);
+
+  // Load settings from Firestore when user changes
+  useEffect(() => {
+    if (!currentUser) {
+      setUserSettings(DEFAULT_SETTINGS);
+      settingsLoadedRef.current = false;
+      return;
+    }
+    const settingsDocRef = doc(db, `users/${currentUser.uid}/settings`, 'ai');
+    getDoc(settingsDocRef).then((snap) => {
+      if (snap.exists()) {
+        setUserSettings(prev => ({ ...DEFAULT_SETTINGS, ...snap.data() }));
+      }
+      settingsLoadedRef.current = true;
+    }).catch(console.error);
+  }, [currentUser]);
+
+  const updateSettings = useCallback((newSettings) => {
+    setUserSettings(prev => {
+      const merged = { ...prev, ...newSettings };
+      if (currentUser) {
+        const settingsDocRef = doc(db, `users/${currentUser.uid}/settings`, 'ai');
+        // Don't store the raw API key in plaintext in Firestore — store it
+        // only if the user explicitly saves (acceptable trade-off for personal apps)
+        setDoc(settingsDocRef, merged, { merge: true }).catch(console.error);
+      }
+      return merged;
+    });
+  }, [currentUser]);
 
   // Fetch notes from Firestore
   useEffect(() => {
@@ -235,7 +270,9 @@ export const NotesProvider = ({ children }) => {
     runAgent({
       query: cleanQuery,
       notes: currentNotes,
-      apiKey: apiKeyRef.current,
+      apiKey: userSettings.openRouterKey || import.meta.env.VITE_OPENROUTER_API_KEY || '',
+      model: userSettings.defaultModel,
+      systemPromptOverride: userSettings.systemPrompt || undefined,
       onSearchResults: (results) => {
         if (results.length > 0) {
           const titles = results.map(r => `"${r.note.title}"`).join(', ');
@@ -278,7 +315,7 @@ export const NotesProvider = ({ children }) => {
         setIsAgentThinking(false);
       },
     });
-  }, []);
+  }, [userSettings]);
 
   // ─── Command executor ───────────────────────────────────────────────────────
   const executeCommand = useCallback((input) => {
@@ -318,10 +355,10 @@ export const NotesProvider = ({ children }) => {
       case 'setkey': {
         const key = args.slice(1).join(' ').trim();
         if (key) {
-          apiKeyRef.current = key;
-          newLines.push({ type: 'system', text: '✓ OpenRouter API key set for this session.' });
+          updateSettings({ openRouterKey: key });
+          newLines.push({ type: 'system', text: '✓ API key saved to your account.' });
         } else {
-          newLines.push({ type: 'error', text: 'Usage: /setkey <your-openrouter-key>' });
+          newLines.push({ type: 'error', text: 'Usage: setkey <your-openrouter-key>' });
         }
         break;
       }
@@ -397,6 +434,8 @@ export const NotesProvider = ({ children }) => {
     searchQuery,
     setSearchQuery,
     isAgentThinking,
+    userSettings,
+    updateSettings,
     updateNote,
     createNote,
     deleteNote,

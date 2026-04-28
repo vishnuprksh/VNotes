@@ -57,12 +57,14 @@ Instructions:
  * @param {string} opts.query - The user's natural language input
  * @param {Object} opts.notes - Frozen read-only notes snapshot
  * @param {string} opts.apiKey - OpenRouter API key
+ * @param {string} [opts.model] - OpenRouter model identifier
+ * @param {string} [opts.systemPromptOverride] - Custom system prompt from settings
  * @param {Function} opts.onToken - callback(tokenString) for streaming tokens
  * @param {Function} opts.onDone - callback() when stream finishes
  * @param {Function} opts.onError - callback(errorMessage) on failure
  * @param {Function} opts.onSearchResults - callback(results) to show which notes were used
  */
-export async function runAgent({ query, notes, apiKey, onToken, onDone, onError, onSearchResults }) {
+export async function runAgent({ query, notes, apiKey, model, systemPromptOverride, onToken, onDone, onError, onSearchResults }) {
   // 1. Semantic search: find most relevant notes (read-only)
   const frozenNotes = Object.freeze({ ...notes });
   const relevantNotes = vectorSearch(query, frozenNotes, 4);
@@ -73,15 +75,19 @@ export async function runAgent({ query, notes, apiKey, onToken, onDone, onError,
   }
 
   // 2. Build messages
-  const systemPrompt = buildSystemPrompt(relevantNotes);
+  const systemPrompt = systemPromptOverride || buildSystemPrompt(relevantNotes);
   const messages = [
-    { role: 'system', content: systemPrompt },
+    { role: 'system', content: systemPromptOverride
+        ? `${systemPromptOverride}\n\n${buildSystemPrompt(relevantNotes).split('---')[1] || ''}`
+        : buildSystemPrompt(relevantNotes)
+    },
     { role: 'user', content: query },
   ];
 
   // 3. Stream response from OpenRouter
   await streamChat({
     apiKey,
+    model,
     messages,
     onToken,
     onDone,

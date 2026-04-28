@@ -1,23 +1,23 @@
 /**
  * openRouterClient.js
  * Thin streaming client for OpenRouter chat completions.
- * Model: z-ai/glm-4.5-air:free
  */
 
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
-const MODEL = 'z-ai/glm-4.5-air:free';
+const DEFAULT_MODEL = 'z-ai/glm-4.5-air:free';
 
 /**
  * Stream a chat completion from OpenRouter.
  * @param {string} apiKey - OpenRouter API key
+ * @param {string} model  - OpenRouter model identifier (e.g. 'openai/gpt-4o')
  * @param {Array} messages - [{ role: 'system'|'user'|'assistant', content: string }]
  * @param {Function} onToken - called with each text chunk as it streams
  * @param {Function} onDone - called when stream is complete
  * @param {Function} onError - called with error message string on failure
  */
-export async function streamChat({ apiKey, messages, onToken, onDone, onError }) {
+export async function streamChat({ apiKey, model, messages, onToken, onDone, onError }) {
   if (!apiKey) {
-    onError('No API key set. Use /setkey <your-openrouter-key> first.');
+    onError('No API key set. Go to Settings → API Keys to add your OpenRouter key.');
     return;
   }
 
@@ -31,7 +31,7 @@ export async function streamChat({ apiKey, messages, onToken, onDone, onError })
         'X-Title': 'VNotes Agent',
       },
       body: JSON.stringify({
-        model: MODEL,
+        model: model || DEFAULT_MODEL,
         messages,
         stream: true,
         max_tokens: 512,
