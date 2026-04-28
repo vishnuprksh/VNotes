@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
@@ -22,6 +22,10 @@ function App() {
 
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isTerminalOpen, setIsTerminalOpen] = useState(true);
+
+  // Ref forwarded to Sidebar so TopBar can focus search
+  const searchInputRef = useRef(null);
 
   const editor = useEditor({
     extensions: [
@@ -51,7 +55,6 @@ function App() {
           editor.commands.setContent(notes[activeNoteId].content);
         }
       } else {
-        // Clear editor if no note is active or found
         editor.commands.setContent('');
       }
     }
@@ -63,6 +66,7 @@ function App() {
         isOpen={isMobileSidebarOpen} 
         setIsOpen={setIsMobileSidebarOpen} 
         onOpenSettings={() => setIsSettingsOpen(true)}
+        searchInputRef={searchInputRef}
       />
       
       {isMobileSidebarOpen && (
@@ -73,11 +77,16 @@ function App() {
       )}
       
       <main className="main-content">
-        <TopBar toggleSidebar={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)} />
+        <TopBar 
+          toggleSidebar={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
+          onOpenSettings={() => setIsSettingsOpen(true)}
+          onFocusSearch={() => searchInputRef.current?.focus()}
+          onToggleTerminal={() => setIsTerminalOpen(p => !p)}
+        />
         
         <Editor editor={editor} />
 
-        <Terminal />
+        {isTerminalOpen && <Terminal />}
       </main>
 
       <Settings isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />

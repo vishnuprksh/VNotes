@@ -93,12 +93,52 @@ const Settings = ({ isOpen, onClose }) => {
             <div className="settings-pane">
               <h2>General Settings</h2>
               <p className="settings-desc">Configure basic application behavior.</p>
-              <div className="settings-empty">
-                <i className="fas fa-tools"></i>
-                <span>General settings coming soon.</span>
+
+              <div className="settings-field">
+                <label>Auto-save Delay</label>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                  <input
+                    type="range"
+                    min={300}
+                    max={3000}
+                    step={100}
+                    value={draft.autoSaveDelay ?? 500}
+                    onChange={e => handleChange('autoSaveDelay', Number(e.target.value))}
+                    className="settings-slider"
+                  />
+                  <span className="settings-slider-label">{((draft.autoSaveDelay ?? 500) / 1000).toFixed(1)}s</span>
+                </div>
+                <span className="settings-hint">How long to wait after typing before syncing to Firestore.</span>
+              </div>
+
+              <div className="settings-field">
+                <label>Default Category for New Notes</label>
+                <select
+                  value={draft.defaultCategory ?? 'Projects'}
+                  onChange={e => handleChange('defaultCategory', e.target.value)}
+                  className="settings-input"
+                >
+                  {['Projects', 'Areas', 'Resources', 'Archives'].map(c => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
+                <span className="settings-hint">New notes created from the terminal will use this category.</span>
+              </div>
+
+              <div className="settings-field checkbox">
+                <label className="checkbox-label">
+                  <input
+                    type="checkbox"
+                    checked={draft.titleFromFirstHeading ?? true}
+                    onChange={e => handleChange('titleFromFirstHeading', e.target.checked)}
+                  />
+                  <span>Extract title from first heading</span>
+                </label>
+                <span className="settings-hint">When enabled, the first H2 heading becomes the note's sidebar title. Otherwise uses the first line of text.</span>
               </div>
             </div>
           )}
+
 
           {/* AI & Models */}
           {activeTab === 'ai' && (
@@ -202,12 +242,60 @@ const Settings = ({ isOpen, onClose }) => {
             <div className="settings-pane">
               <h2>Appearance</h2>
               <p className="settings-desc">Customize the look and feel of VNotes.</p>
-              <div className="settings-empty">
-                <i className="fas fa-palette"></i>
-                <span>Appearance settings coming soon.</span>
+
+              <div className="settings-field">
+                <label>Font Size</label>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                  <input
+                    type="range"
+                    min={12}
+                    max={22}
+                    step={1}
+                    value={draft.fontSize ?? 15}
+                    onChange={e => handleChange('fontSize', Number(e.target.value))}
+                    className="settings-slider"
+                  />
+                  <span className="settings-slider-label">{draft.fontSize ?? 15}px</span>
+                </div>
+                <span className="settings-hint">Controls the editor body text size.</span>
+              </div>
+
+              <div className="settings-field">
+                <label>Editor Max-Width</label>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                  <input
+                    type="range"
+                    min={480}
+                    max={1200}
+                    step={40}
+                    value={draft.editorWidth ?? 720}
+                    onChange={e => handleChange('editorWidth', Number(e.target.value))}
+                    className="settings-slider"
+                  />
+                  <span className="settings-slider-label">{draft.editorWidth ?? 720}px</span>
+                </div>
+                <span className="settings-hint">Max width of the editor content column.</span>
+              </div>
+
+              <div className="settings-field">
+                <label>Line Height</label>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                  <input
+                    type="range"
+                    min={1.4}
+                    max={2.2}
+                    step={0.1}
+                    value={draft.lineHeight ?? 1.75}
+                    onChange={e => handleChange('lineHeight', Number(e.target.value))}
+                    className="settings-slider"
+                  />
+                  <span className="settings-slider-label">{(draft.lineHeight ?? 1.75).toFixed(1)}×</span>
+                </div>
+                <span className="settings-hint">Spacing between lines in the editor.</span>
               </div>
             </div>
           )}
+
 
           <div className="settings-footer">
             <button className="settings-btn secondary" onClick={handleCancel}>Cancel</button>
