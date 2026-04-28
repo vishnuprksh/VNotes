@@ -53,11 +53,11 @@ const Editor = ({ editor }) => {
           <div className="note-subtitle">
             <span>
               <i className="far fa-calendar"></i>{' '}
-              {formatDate(activeNote.createdAt)}
+              {formatDate(activeNote.createdAt || activeNote.updatedAt || new Date().toISOString())}
             </span>
             <span>
               <i className="far fa-clock"></i>{' '}
-              {timeAgo(activeNote.createdAt)}
+              {timeAgo(activeNote.updatedAt || activeNote.createdAt || new Date().toISOString())}
             </span>
           </div>
         </header>

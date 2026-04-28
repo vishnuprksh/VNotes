@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { PARA_CATEGORIES, CATEGORY_ICONS } from '../utils/para';
 import { useNotesContext } from '../context/NotesContext';
 import { useAuth } from '../context/AuthContext';
