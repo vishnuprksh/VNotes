@@ -2,14 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { useNotesContext } from '../context/NotesContext';
 
 const MODELS = [
-  { id: 'z-ai/glm-4.5-air:free',            label: 'GLM 4.5 Air — Free (OpenRouter)' },
-  { id: 'openai/gpt-4o',                     label: 'GPT-4o (OpenAI)' },
-  { id: 'openai/gpt-4o-mini',                label: 'GPT-4o Mini (OpenAI)' },
-  { id: 'anthropic/claude-3.5-sonnet',       label: 'Claude 3.5 Sonnet (Anthropic)' },
-  { id: 'anthropic/claude-3-haiku',          label: 'Claude 3 Haiku (Anthropic)' },
-  { id: 'google/gemini-pro-1.5',             label: 'Gemini 1.5 Pro (Google)' },
-  { id: 'google/gemini-flash-1.5',           label: 'Gemini 1.5 Flash (Google)' },
-  { id: 'meta-llama/llama-3.1-8b-instruct:free', label: 'Llama 3.1 8B — Free (Meta)' },
+  { id: 'z-ai/glm-4.5-air:free', label: 'GLM 4.5 Air — Free (OpenRouter)' },
+  { id: 'nvidia/nemotron-3-super-120b-a12b:free', label: 'Nemotron 3 Super 120B — Free (NVIDIA)' },
+  { id: 'minimax/minimax-m2.5:free', label: 'MiniMax m2.5 — Free (MiniMax)' },
+  { id: 'openai/gpt-oss-120b:free', label: 'GPT OSS 120B — Free (OpenAI)' },
+  { id: 'liquid/lfm-2.5-1.2b-thinking:free', label: 'LFM 2.5 1.2B Thinking — Free (Liquid)' },
+  { id: 'meta-llama/llama-3.3-70b-instruct:free', label: 'Llama 3.3 70B Instruct — Free (Meta)' },
+  { id: 'baidu/qianfan-ocr-fast:free', label: 'Qianfan OCR Fast — Free (Baidu)' },
 ];
 
 const Settings = ({ isOpen, onClose }) => {
