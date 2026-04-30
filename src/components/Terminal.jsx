@@ -56,8 +56,11 @@ const Terminal = () => {
   } = useNotesContext();
 
   const [isMinimized, setIsMinimized] = React.useState(false);
+  const [terminalHeight, setTerminalHeight] = React.useState(250);
   const bottomRef = useRef(null);
   const inputRef = useRef(null);
+  const terminalRef = useRef(null);
+  const isResizing = useRef(false);
 
   // Command history — stored in a ref to avoid re-renders
   const historyRef = useRef([]);     // oldest → newest
@@ -117,8 +120,45 @@ const Terminal = () => {
     setIsMinimized(!isMinimized);
   };
 
+  const handleMouseDown = (e) => {
+    isResizing.current = true;
+    e.preventDefault();
+  };
+
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      if (!isResizing.current) return;
+      
+      if (terminalRef.current) {
+        const rect = terminalRef.current.getBoundingClientRect();
+        const newHeight = window.innerHeight - rect.top - e.clientY;
+        const minHeight = 100;
+        const maxHeight = window.innerHeight - 200;
+        const constrainedHeight = Math.max(minHeight, Math.min(newHeight, maxHeight));
+        setTerminalHeight(constrainedHeight);
+      }
+    };
+
+    const handleMouseUp = () => {
+      isResizing.current = false;
+    };
+
+    if (isResizing.current) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      return () => {
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+      };
+    }
+  }, []);
+
   return (
-    <footer className={`terminal-pane ${isMinimized ? 'minimized' : ''}`}>
+    <footer 
+      ref={terminalRef}
+      className={`terminal-pane ${isMinimized ? 'minimized' : ''}`}
+      style={{ height: isMinimized ? '36px' : `${terminalHeight}px` }}
+    >
       <div className="terminal-header" onClick={isMinimized ? toggleMinimize : undefined}>
         <div className="terminal-title">
           <i className="fas fa-terminal"></i>
@@ -168,6 +208,7 @@ const Terminal = () => {
 
         <div ref={bottomRef} />
       </div>
+      {!isMinimized && <div className="terminal-resize-handle" onMouseDown={handleMouseDown} />}
     </footer>
   );
 };

@@ -596,7 +596,6 @@ ul[data-type="taskList"] input[type="checkbox"] {
     backdrop-filter: blur(20px);
     display: flex;
     flex-direction: column;
-    transition: height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     z-index: 100;
 }
 
@@ -604,6 +603,18 @@ ul[data-type="taskList"] input[type="checkbox"] {
     height: 36px;
     overflow: hidden;
     cursor: pointer;
+}
+
+.terminal-resize-handle {
+    height: 4px;
+    background: linear-gradient(to bottom, var(--outline-variant), transparent);
+    cursor: ns-resize;
+    user-select: none;
+    transition: background 0.2s;
+}
+
+.terminal-resize-handle:hover {
+    background: linear-gradient(to bottom, var(--primary), transparent);
 }
 
 .terminal-header {
@@ -1671,3 +1682,26 @@ del.diff-remove {
     margin-bottom: 6px;
 }
 .empty-state-content p { font-size: 0.82rem; }
+
+/* ── Math / LaTeX ───────────────────────────────────────────────── */
+.math-inline {
+  display: inline;
+  cursor: default;
+  user-select: none;
+}
+
+.math-inline .katex {
+  font-size: 1em;
+}
+
+.math-block {
+  display: block;
+  text-align: center;
+  padding: 0.75rem 0;
+  cursor: default;
+  user-select: none;
+}
+
+.math-block .katex-display {
+  margin: 0;
+}

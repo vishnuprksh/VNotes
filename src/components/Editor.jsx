@@ -100,9 +100,44 @@ const DiffView = ({ originalHtml, proposedHtml, onAccept, onReject }) => {
 
 // ─── RawView ──────────────────────────────────────────────────────────────────
 
+function prettyHTML(html) {
+  if (!html) return '';
+  const INDENT = '  ';
+  const BLOCK = new Set([
+    'html','head','body','div','p','ul','ol','li','table','thead','tbody','tr','td','th',
+    'h1','h2','h3','h4','h5','h6','blockquote','pre','figure','section','article',
+    'header','footer','nav','main','aside','form','fieldset','details','summary',
+  ]);
+  let out = '';
+  let depth = 0;
+  const tokens = html.split(/(<[^>]+>)/g);
+  for (const tok of tokens) {
+    if (!tok) continue;
+    if (tok.startsWith('</')) {
+      const tag = tok.match(/<\/(\w+)/)?.[1]?.toLowerCase();
+      if (BLOCK.has(tag)) {
+        depth = Math.max(0, depth - 1);
+        out += '\n' + INDENT.repeat(depth) + tok;
+        continue;
+      }
+    }
+    if (tok.startsWith('<') && !tok.startsWith('</') && !tok.startsWith('<!')) {
+      const tag = tok.match(/<(\w+)/)?.[1]?.toLowerCase();
+      const selfClosing = tok.endsWith('/>');
+      if (BLOCK.has(tag)) {
+        out += '\n' + INDENT.repeat(depth) + tok;
+        if (!selfClosing) depth++;
+        continue;
+      }
+    }
+    out += tok;
+  }
+  return out.replace(/^\n/, '');
+}
+
 const RawView = ({ content }) => (
   <div className="raw-view">
-    <pre className="raw-content">{content}</pre>
+    <pre className="raw-content">{prettyHTML(content)}</pre>
   </div>
 );
 

@@ -11,6 +11,7 @@ import Editor from './components/Editor';
 import Terminal from './components/Terminal';
 import Settings from './components/Settings';
 import { useNotesContext } from './context/NotesContext';
+import { InlineMath, BlockMath } from './extensions/MathExtension';
 import './index.css';
 
 function App() {
@@ -38,6 +39,8 @@ function App() {
       TaskItem.configure({
         nested: true,
       }),
+      InlineMath,
+      BlockMath,
     ],
     content: notes[activeNoteId]?.content || '',
     onUpdate: ({ editor }) => {
