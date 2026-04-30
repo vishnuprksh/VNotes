@@ -52,11 +52,11 @@ function markdownToHtml(md) {
 function normalizeData(data) {
   if (!Array.isArray(data)) return [];
 
-  // Check if it's already grouped: [{ group, summaries: [...] }]
-  if (data.length > 0 && data[0].summaries !== undefined) {
+  // Check if it's already grouped: [{ group, summaries: [...] }] or [{ name, sessions: [...] }]
+  if (data.length > 0 && (data[0].summaries !== undefined || data[0].sessions !== undefined || data[0].notes !== undefined)) {
     return data.map(item => ({
       group: item.group || item.name || item.category || 'Uncategorized',
-      summaries: Array.isArray(item.summaries) ? item.summaries : [],
+      summaries: Array.isArray(item.summaries) ? item.summaries : (Array.isArray(item.sessions) ? item.sessions : (Array.isArray(item.notes) ? item.notes : [])),
     }));
   }
 
@@ -96,7 +96,7 @@ export async function fetchReadLaterNotes(apiKey) {
     const category = `Projects/${group}`;
     summaries.forEach(summary => {
       const title = summary.title || summary.name || 'Untitled';
-      const rawContent = summary.content || summary.summary || summary.text || summary.body || '';
+      const rawContent = summary.markdown || summary.content || summary.summary || summary.text || summary.body || '';
       const url = summary.url || summary.link || summary.source || '';
 
       let html = markdownToHtml(rawContent);
@@ -105,12 +105,15 @@ export async function fetchReadLaterNotes(apiKey) {
       const sourceLink = url ? `<p><a href="${url}" target="_blank" rel="noreferrer">${url}</a></p>` : '';
       html = heading + sourceLink + html;
 
+      const dateVal = summary.created_at || summary.createdAt || summary.updatedAt;
+      const createdAt = dateVal ? new Date(dateVal).toISOString() : new Date().toISOString();
+
       notes.push({
         id: `readlater-${summary.id || summary._id || Date.now() + Math.random()}`,
         title,
         category,
         tag: group,
-        createdAt: summary.created_at || summary.createdAt || new Date().toISOString(),
+        createdAt,
         content: html,
         syncedFrom: 'readlater',
       });
