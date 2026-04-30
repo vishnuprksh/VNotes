@@ -100,10 +100,9 @@ export async function fetchReadLaterNotes(apiKey) {
       const url = summary.url || summary.link || summary.source || '';
 
       let html = markdownToHtml(rawContent);
-      // Prepend heading + source link if available
-      const heading = `<h2>${title}</h2>`;
+      // Prepend source link if available
       const sourceLink = url ? `<p><a href="${url}" target="_blank" rel="noreferrer">${url}</a></p>` : '';
-      html = heading + sourceLink + html;
+      html = sourceLink + html;
 
       const dateVal = summary.created_at || summary.createdAt || summary.updatedAt;
       const createdAt = dateVal ? new Date(dateVal).toISOString() : new Date().toISOString();
