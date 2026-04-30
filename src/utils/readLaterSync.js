@@ -76,10 +76,16 @@ function normalizeData(data) {
  * Returns an array of note objects ready to be stored.
  */
 export async function fetchReadLaterNotes(apiKey) {
-  const url = `${API_BASE}?api_key=${encodeURIComponent(apiKey)}`;
+  const trimmed = (apiKey || '').trim();
+  if (!trimmed || trimmed.length > 128 || trimmed.includes(' ')) {
+    throw new Error('Invalid API key format. Please enter the correct key from your read-later service.');
+  }
+  const url = `${API_BASE}?api_key=${encodeURIComponent(trimmed)}`;
   const response = await fetch(url);
   if (!response.ok) {
-    throw new Error(`API error: ${response.status} ${response.statusText}`);
+    let detail = '';
+    try { detail = await response.text(); } catch (_) {}
+    throw new Error(`API error ${response.status}: ${detail || response.statusText}`);
   }
   const json = await response.json();
   const raw = json.data ?? json;
