@@ -1,16 +1,18 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
-import { collection, doc, setDoc, deleteDoc, onSnapshot, writeBatch, getDoc } from 'firebase/firestore';
+import { collection, doc, setDoc, deleteDoc, onSnapshot, writeBatch, getDoc, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from './AuthContext';
 import { INITIAL_NOTES } from '../utils/para';
 import { routeInput, ROUTE_AGENT } from '../agent/agentRouter';
 import { runAgent } from '../agent/agentCore';
+import { fetchReadLaterNotes } from '../utils/readLaterSync';
 
 const DEFAULT_SETTINGS = {
   openRouterKey: '',
   defaultModel: 'z-ai/glm-4.5-air:free',
   systemPrompt: 'You are a helpful assistant integrated into a terminal of a note-taking app.',
   streamResponses: true,
+  readLaterApiKey: '',
 };
 
 const NotesContext = createContext();
@@ -471,6 +473,62 @@ export const NotesProvider = ({ children }) => {
     ]);
   }, []);
 
+  // ─── Read-Later Sync ────────────────────────────────────────────────────────
+  const [syncStatus, setSyncStatus] = useState(null); // null | 'syncing' | 'done' | 'error'
+  const [syncMessage, setSyncMessage] = useState('');
+
+  const syncReadLater = useCallback(async (apiKey) => {
+    const key = apiKey || userSettings.readLaterApiKey;
+    if (!key) {
+      setSyncStatus('error');
+      setSyncMessage('No API key configured.');
+      return;
+    }
+    setSyncStatus('syncing');
+    setSyncMessage('Fetching summaries…');
+    try {
+      const incomingNotes = await fetchReadLaterNotes(key);
+      if (incomingNotes.length === 0) {
+        setSyncStatus('done');
+        setSyncMessage('No summaries found.');
+        return;
+      }
+
+      // Upsert: replace existing synced notes, keep manual notes intact
+      setNotes(prev => {
+        const next = { ...prev };
+        // Remove old synced notes
+        Object.keys(next).forEach(id => {
+          if (next[id].syncedFrom === 'readlater') delete next[id];
+        });
+        incomingNotes.forEach(note => { next[note.id] = note; });
+        return next;
+      });
+
+      if (currentUser) {
+        const batch = writeBatch(db);
+        // Delete old synced notes from Firestore
+        const notesRef = collection(db, `users/${currentUser.uid}/notes`);
+        const snap = await getDocs(notesRef);
+        snap.forEach(d => {
+          if (d.data().syncedFrom === 'readlater') batch.delete(d.ref);
+        });
+        incomingNotes.forEach(note => {
+          const docRef = doc(db, `users/${currentUser.uid}/notes`, note.id);
+          batch.set(docRef, note);
+        });
+        await batch.commit();
+      }
+
+      setSyncStatus('done');
+      setSyncMessage(`Synced ${incomingNotes.length} note(s) successfully.`);
+    } catch (err) {
+      console.error('Read-later sync error:', err);
+      setSyncStatus('error');
+      setSyncMessage(err.message || 'Sync failed.');
+    }
+  }, [userSettings.readLaterApiKey, currentUser]);
+
   const value = {
     notes,
     activeNoteId,
@@ -495,6 +553,10 @@ export const NotesProvider = ({ children }) => {
     rejectNoteChange,
     activeTab,
     setActiveTab,
+    syncReadLater,
+    syncStatus,
+    syncMessage,
+    setSyncStatus,
   };
 
   return <NotesContext.Provider value={value}>{children}</NotesContext.Provider>;

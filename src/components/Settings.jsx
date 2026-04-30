@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNotesContext } from '../context/NotesContext';
+import { fetchReadLaterNotes } from '../utils/readLaterSync';
 
 const MODELS = [
   { id: 'z-ai/glm-4.5-air:free', label: 'GLM 4.5 Air — Free (OpenRouter)' },
@@ -12,7 +13,7 @@ const MODELS = [
 ];
 
 const Settings = ({ isOpen, onClose }) => {
-  const { userSettings, updateSettings } = useNotesContext();
+  const { userSettings, updateSettings, syncReadLater, syncStatus, syncMessage, setSyncStatus } = useNotesContext();
 
   const [activeTab, setActiveTab] = useState('ai');
   // Local draft state — only commits on Save
@@ -78,6 +79,12 @@ const Settings = ({ isOpen, onClose }) => {
               onClick={() => setActiveTab('appearance')}
             >
               <i className="fas fa-paint-brush"></i> Appearance
+            </button>
+            <button
+              className={`settings-tab ${activeTab === 'sync' ? 'active' : ''}`}
+              onClick={() => { setActiveTab('sync'); setSyncStatus(null); }}
+            >
+              <i className="fas fa-sync-alt"></i> Sync
             </button>
           </div>
         </div>
@@ -206,6 +213,64 @@ const Settings = ({ isOpen, onClose }) => {
                 <i className="fas fa-palette"></i>
                 <span>Appearance settings coming soon.</span>
               </div>
+            </div>
+          )}
+
+          {/* Sync */}
+          {activeTab === 'sync' && (
+            <div className="settings-pane">
+              <h2>Read-Later Sync</h2>
+              <p className="settings-desc">
+                Import summaries from your read-later service. Each group becomes a subsection
+                under <strong>Projects</strong>, and each summary becomes a note.
+              </p>
+
+              <div className="settings-field">
+                <label>Read-Later API Key</label>
+                <input
+                  type="password"
+                  value={draft.readLaterApiKey || ''}
+                  onChange={e => handleChange('readLaterApiKey', e.target.value)}
+                  className="settings-input"
+                  placeholder="Paste your API key here…"
+                  autoComplete="off"
+                  spellCheck={false}
+                />
+                <span className="settings-hint">
+                  Used to fetch summaries from your read-later service API.
+                </span>
+              </div>
+
+              <div className="settings-field">
+                <button
+                  className="settings-btn primary"
+                  disabled={syncStatus === 'syncing' || !draft.readLaterApiKey}
+                  onClick={async () => {
+                    // Save key first, then sync
+                    updateSettings({ readLaterApiKey: draft.readLaterApiKey });
+                    await syncReadLater(draft.readLaterApiKey);
+                  }}
+                >
+                  {syncStatus === 'syncing'
+                    ? <><i className="fas fa-spinner fa-spin"></i> Syncing…</>
+                    : <><i className="fas fa-sync-alt"></i> Sync Now</>}
+                </button>
+              </div>
+
+              {syncStatus === 'done' && (
+                <div className="settings-key-status">
+                  <i className="fas fa-check-circle"></i> {syncMessage}
+                </div>
+              )}
+              {syncStatus === 'error' && (
+                <div className="settings-key-status" style={{ color: 'var(--color-error, #e74c3c)' }}>
+                  <i className="fas fa-exclamation-circle"></i> {syncMessage}
+                </div>
+              )}
+
+              <p className="settings-hint" style={{ marginTop: '1rem' }}>
+                Re-syncing replaces previously synced notes. Your manually created notes are never affected.
+              </p>
             </div>
           )}
 
