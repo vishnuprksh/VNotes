@@ -2,6 +2,26 @@ import React, { useMemo } from 'react';
 import { EditorContent } from '@tiptap/react';
 import { useNotesContext } from '../context/NotesContext';
 
+// ── Date helpers ────────────────────────────────────────
+function formatDate(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function timeAgo(iso) {
+  if (!iso) return '';
+  const diff = Date.now() - new Date(iso).getTime();
+  const s = Math.floor(diff / 1000);
+  if (s < 60) return `${s}s ago`;
+  const m = Math.floor(s / 60);
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  const days = Math.floor(h / 24);
+  return `${days}d ago`;
+}
+
 // ─── Minimal word-level diff (no external dep) ────────────────────────────────
 
 function stripHtml(html) {
@@ -10,17 +30,12 @@ function stripHtml(html) {
   return div.textContent || div.innerText || '';
 }
 
-/**
- * Longest-common-subsequence on word arrays.
- * Returns an array of diff ops: { type: 'equal'|'remove'|'add', value: string }
- */
 function wordDiff(oldText, newText) {
   const oldWords = oldText.split(/(\s+)/);
   const newWords = newText.split(/(\s+)/);
   const m = oldWords.length;
   const n = newWords.length;
 
-  // Build LCS table
   const dp = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0));
   for (let i = 1; i <= m; i++) {
     for (let j = 1; j <= n; j++) {
@@ -32,7 +47,6 @@ function wordDiff(oldText, newText) {
     }
   }
 
-  // Trace back
   const ops = [];
   let i = m, j = n;
   while (i > 0 || j > 0) {
@@ -107,7 +121,15 @@ const Editor = ({ editor }) => {
   const activeNote = notes[activeNoteId];
 
   if (!activeNote || !editor) {
-    return <div className="editor-container editor-empty">Select a note to start writing</div>;
+    return (
+      <div className="editor-container editor-empty-state">
+        <div className="empty-state-content">
+          <i className="fas fa-feather-alt"></i>
+          <h3>No note selected</h3>
+          <p>Pick a note from the sidebar or create a new one.</p>
+        </div>
+      </div>
+    );
   }
 
   const hasPending = !!(pendingNoteChange && pendingNoteChange.noteId === activeNoteId);
@@ -141,8 +163,12 @@ const Editor = ({ editor }) => {
       <div className="editor-scroll-body">
         <article className="editor-content">
           <div className="note-meta">
-            <span className={`tag ${(activeNote.category || 'Projects').toLowerCase()}`}>{activeNote.category || 'Projects'}</span>
+            <span className={`tag ${(activeNote.category || 'Projects').split('/')[0].toLowerCase()}`}>{activeNote.category || 'Projects'}</span>
             <span className="tag generic">{activeNote.tag || 'Note'}</span>
+            <span className="note-date-hint">
+              <i className="far fa-calendar"></i>{' '}
+              {formatDate(activeNote.createdAt || new Date().toISOString())}
+            </span>
           </div>
 
           {activeTab === 'preview' && (

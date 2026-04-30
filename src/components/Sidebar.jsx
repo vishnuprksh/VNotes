@@ -1,10 +1,10 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { PARA_CATEGORIES, CATEGORY_ICONS } from '../utils/para';
 import { useNotesContext } from '../context/NotesContext';
 import { useAuth } from '../context/AuthContext';
 import ContextMenu from './ContextMenu';
 
-const Sidebar = ({ isOpen, setIsOpen, onOpenSettings }) => {
+const Sidebar = ({ isOpen, setIsOpen, onOpenSettings, searchInputRef }) => {
   const { currentUser, signInWithGoogle, signOut } = useAuth();
   const { 
     notes, 
@@ -35,6 +35,21 @@ const Sidebar = ({ isOpen, setIsOpen, onOpenSettings }) => {
 
   const [editingSection, setEditingSection] = useState(null); // path
   const [editValue, setEditValue] = useState('');
+  const internalSearchRef = useRef(null);
+  const resolvedSearchRef = searchInputRef || internalSearchRef;
+
+  // Ctrl+K / Cmd+K → focus search
+  useEffect(() => {
+    const handler = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        resolvedSearchRef.current?.focus();
+        resolvedSearchRef.current?.select();
+      }
+    };
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, [resolvedSearchRef]);
 
   // Persist expanded sections
   useEffect(() => {
@@ -223,12 +238,21 @@ const Sidebar = ({ isOpen, setIsOpen, onOpenSettings }) => {
       <div className="search-bar" style={{ marginBottom: '2rem', width: '100%' }}>
         <i className="fas fa-search"></i>
         <input 
+          ref={resolvedSearchRef}
           type="text" 
-          placeholder="Search..." 
+          placeholder="Search notes..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
         />
-        <span style={{ fontSize: '0.6rem', color: 'var(--outline)' }}>⌘K</span>
+        {searchQuery ? (
+          <i
+            className="fas fa-times"
+            style={{ fontSize: '0.65rem', cursor: 'pointer', color: 'var(--outline)' }}
+            onClick={() => setSearchQuery('')}
+          />
+        ) : (
+          <span style={{ fontSize: '0.6rem', color: 'var(--outline)', whiteSpace: 'nowrap' }}>Ctrl K</span>
+        )}
       </div>
 
       <nav className="nav-group">
